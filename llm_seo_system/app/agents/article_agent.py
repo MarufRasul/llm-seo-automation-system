@@ -1,34 +1,23 @@
-# app/agents/article_agent.py
-
-from app.services.llm_service import LLMService
-
-
+import os
+from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+load_dotenv()
 class ArticleAgent:
     def __init__(self):
-        self.llm = LLMService()
+        self.llm = ChatOpenAI(
+            model="gpt-4o-mini",
+            temperature=0.7
+        )
 
-    def generate_draft(self, topic: str) -> str:
-        """
-        Generate an article draft based on the specified topic
-        """
-
+    def generate_article(self, topic: str) -> str:
         prompt = f"""
-        You are an expert content writer.
+Write a detailed, SEO-friendly blog article about "{topic}".
 
-        Write a detailed, informative article about: {topic}
-
-        The article should include:
-        - Introduction
-        - Explanation of the topic
-        - Key features or characteristics
-        - Benefits or advantages
-        - Comparison if relevant
-        - Practical use cases
-        - Conclusion
-
-        Write in a clear, structured, SEO-friendly way.
-        """
-
-        response = self.llm.ask(prompt)
-
-        return response
+Requirements:
+- Clear structure (H1, H2, H3)
+- Informative and natural tone
+- Include practical use cases
+- Around 800–1200 words
+"""
+        response = self.llm.invoke(prompt)
+        return response.content
