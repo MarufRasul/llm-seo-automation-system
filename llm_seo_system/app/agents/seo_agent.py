@@ -8,42 +8,58 @@ class SEOAgent:
             temperature=0.3
         )
 
-    def generate_search_queries(self, topic: str) -> str:
-        prompt = f"""
-You are an AI SEO specialist.
-
-For the topic "{topic}", generate:
-- 10 questions people might ask ChatGPT
-- 5 long-tail search-style prompts
-Focus on natural language queries.
-"""
+    def _ask(self, prompt: str):
         return self.llm.invoke(prompt).content
 
-    def generate_faq(self, topic: str) -> str:
+    # 🔹 SEO анализ темы
+    def analyze_topic(self, topic: str):
         prompt = f"""
-Create an SEO-optimized FAQ section for an article about "{topic}".
-Provide 5 Q&A pairs.
-"""
-        return self.llm.invoke(prompt).content
+You are an advanced SEO strategist.
 
-    def optimize_article(self, article: str, seo_data: dict) -> str:
+For the topic: "{topic}"
+
+Provide:
+
+1. Meta Title (SEO optimized)
+2. Meta Description (max 160 characters)
+3. URL Slug
+4. Main Keywords
+5. LSI Keywords
+6. Important Entities related to the topic
+"""
+        return self._ask(prompt)
+
+    # 🔹 Поисковые вопросы
+    def generate_search_queries(self, topic: str):
         prompt = f"""
-You are optimizing an article for LLM SEO (Generative Engine Optimization).
+Generate 10 search questions and 5 long-tail search queries for: "{topic}"
+"""
+        return self._ask(prompt)
+
+    # 🔹 FAQ блок
+    def generate_faq(self, topic: str):
+        prompt = f"""
+Create an SEO-friendly FAQ section (5 Q&A) for: "{topic}"
+"""
+        return self._ask(prompt)
+
+    # 🔹 SEO оптимизация статьи
+    def optimize_article(self, article: str, seo_data: dict):
+        prompt = f"""
+You are an SEO editor.
+
+Improve the article using this SEO data:
+
+SEO DATA:
+{seo_data}
 
 ARTICLE:
 {article}
 
-SEARCH QUERIES:
-{seo_data['queries']}
-
-FAQ:
-{seo_data['faq']}
-
-Improve the article by:
-- Adding natural answers to likely AI questions
-- Integrating entities
-- Making structure LLM-friendly
-- Keeping it readable
-Return full optimized article.
+Tasks:
+- naturally insert keywords
+- improve headings
+- increase semantic relevance
+- keep it human and readable
 """
-        return self.llm.invoke(prompt).content
+        return self._ask(prompt)
