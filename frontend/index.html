@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI SEO Blog Generator - GEO Content Engine</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      header {
+        text-align: center;
+        color: white;
+        margin-bottom: 40px;
+        padding: 30px 0;
+      }
+
+      header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      header p {
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      @media (max-width: 768px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        transition:
+          transform 0.3s,
+          box-shadow 0.3s;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+      }
+
+      .card h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon {
+        font-size: 1.5em;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+      }
+
+      input[type='text'],
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #eee;
+        border-radius: 8px;
+        font-size: 1em;
+        font-family: inherit;
+        transition: border-color 0.3s;
+      }
+
+      input[type='text']:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        width: 100%;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .loading.active {
+        display: block;
+      }
+
+      .spinner {
+        border: 4px solid #eee;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .results {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .result-item {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+      }
+
+      .result-item h3 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+      }
+
+      .result-item p {
+        color: #666;
+        line-height: 1.6;
+        word-break: break-word;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #eee;
+      }
+
+      .tab-btn {
+        background: none;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        color: #999;
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+        transition: all 0.3s;
+      }
+
+      .tab-btn.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .stat-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-box .number {
+        font-size: 2em;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .stat-box .label {
+        font-size: 0.9em;
+        opacity: 0.9;
+      }
+
+      .error {
+        background: #fee;
+        color: #c33;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #c33;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .error.show {
+        display: block;
+      }
+
+      .success {
+        background: #efe;
+        color: #3c3;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #3c3;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .success.show {
+        display: block;
+      }
+
+      .articles-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .article-link {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: #333;
+      }
+
+      .article-link:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+      }
+
+      code {
+        background: #f5f5f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        color: #c7254e;
+      }
+
+      pre {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 10px 0;
+      }
+
+      .footer {
+        text-align: center;
+        color: white;
+        padding: 20px;
+        opacity: 0.8;
+        margin-top: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🚀 AI SEO Blog Generator</h1>
+        <p>GEO Content Engine - Optimized for AI Visibility</p>
+      </header>
+
+      <div class="main-content">
+        <!-- Generator Section -->
+        <div class="card">
+          <h2><span class="icon">✍️</span> Content Generator</h2>
+
+          <div class="error" id="error"></div>
+          <div class="success" id="success"></div>
+
+          <div class="form-group">
+            <label for="topic">Topic to Research & Generate</label>
+            <input
+              type="text"
+              id="topic"
+              placeholder="e.g., LG Gram laptop for students"
+              value="LG Gram laptop for students"
+            />
+          </div>
+
+          <button id="generateBtn" onclick="generateArticle()">
+            🔥 Generate AI-Optimized Article
+          </button>
+
+          <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Generating content... this may take 2-3 minutes</p>
+          </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="card">
+          <h2><span class="icon">📊</span> System Status</h2>
+
+          <div class="stats" id="stats">
+            <div class="stat-box">
+              <div class="number" id="totalArticles">0</div>
+              <div class="label">Articles Generated</div>
+            </div>
+            <div class="stat-box">
+              <div class="number" id="totalTopics">0</div>
+              <div class="label">Topics in Memory</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 20px; margin-bottom: 10px">
+            📚 Generated Articles
+          </h3>
+          <div class="articles-list" id="articlesList">
+            <p style="color: #999">Loading articles...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="card">
+        <h2><span class="icon">📄</span> Generated Content</h2>
+
+        <div class="tabs" id="tabs">
+          <button class="tab-btn active" onclick="switchTab('raw')">
+            Raw Article
+          </button>
+          <button class="tab-btn" onclick="switchTab('seo')">
+            SEO Queries
+          </button>
+          <button class="tab-btn" onclick="switchTab('faq')">FAQ Block</button>
+          <button class="tab-btn" onclick="switchTab('optimized')">
+            Optimized Version
+          </button>
+          <button class="tab-btn" onclick="switchTab('score')">
+            SEO Score
+          </button>
+        </div>
+
+        <div class="tab-content active" id="tab-raw">
+          <div class="result-item">
+            <h3>Raw Article</h3>
+            <p id="resultRaw" style="white-space: pre-wrap">
+              Generate an article to see results here...
+            </p>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-seo">
+          <div class="result-item">
+            <h3>SEO Search Queries</h3>
+            <p id="resultSeo" style="white-space: pre-wrap">
+              Generate an article to see results here...
+            </p>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-faq">
+          <div class="result-item">
+            <h3>FAQ Block</h3>
+            <p id="resultFaq" style="white-space: pre-wrap">
+              Generate an article to see results here...
+            </p>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-optimized">
+          <div class="result-item">
+            <h3>Optimized Article</h3>
+            <p id="resultOptimized" style="white-space: pre-wrap">
+              Generate an article to see results here...
+            </p>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-score">
+          <div class="result-item">
+            <h3>SEO Score & Analysis</h3>
+            <p id="resultScore" style="white-space: pre-wrap">
+              Generate an article to see results here...
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>🤖 Powered by AI LLM SEO Automation System</p>
+        <p>Optimizing content for LLM visibility (GEO)</p>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = 'http://localhost:5000/api';
+
+      async function generateArticle() {
+        const topic = document.getElementById('topic').value.trim();
+
+        if (!topic) {
+          showError('Please enter a topic');
+          return;
+        }
+
+        const btn = document.getElementById('generateBtn');
+        const loading = document.getElementById('loading');
+
+        btn.disabled = true;
+        loading.classList.add('active');
+        hideError();
+        hideSuccess();
+
+        try {
+          const response = await fetch(`${API_BASE}/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            document.getElementById('resultRaw').textContent =
+              data.data.raw_article;
+            document.getElementById('resultSeo').textContent =
+              data.data.seo_queries;
+            document.getElementById('resultFaq').textContent = data.data.faq;
+            document.getElementById('resultOptimized').textContent =
+              data.data.optimized_article;
+            document.getElementById('resultScore').textContent =
+              data.data.seo_score;
+
+            showSuccess(
+              `✅ Article generated successfully! Saved to: ${data.data.file_path}`,
+            );
+            loadStats();
+          } else {
+            showError(`❌ Error: ${data.error}`);
+          }
+        } catch (error) {
+          showError(`Network error: ${error.message}`);
+        } finally {
+          btn.disabled = false;
+          loading.classList.remove('active');
+        }
+      }
+
+      function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach((el) => {
+          el.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach((el) => {
+          el.classList.remove('active');
+        });
+
+        // Show selected tab
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        event.target.classList.add('active');
+      }
+
+      async function loadStats() {
+        try {
+          const articlesRes = await fetch(`${API_BASE}/articles`);
+          const articlesData = await articlesRes.json();
+
+          const memoryRes = await fetch(`${API_BASE}/memory`);
+          const memoryData = await memoryRes.json();
+
+          document.getElementById('totalArticles').textContent =
+            articlesData.count || 0;
+          document.getElementById('totalTopics').textContent =
+            memoryData.count || 0;
+
+          // Load articles list
+          const articlesList = document.getElementById('articlesList');
+          if (articlesData.articles && articlesData.articles.length > 0) {
+            articlesList.innerHTML = articlesData.articles
+              .map(
+                (article) => `
+                        <div class="article-link" onclick="loadArticle('${article}')">
+                            <span>📄 ${article}</span>
+                            <span>→</span>
+                        </div>
+                    `,
+              )
+              .join('');
+          } else {
+            articlesList.innerHTML =
+              "<p style='color: #999;'>No articles generated yet</p>";
+          }
+        } catch (error) {
+          console.error('Error loading stats:', error);
+        }
+      }
+
+      function showError(message) {
+        const el = document.getElementById('error');
+        el.textContent = message;
+        el.classList.add('show');
+      }
+
+      function hideError() {
+        document.getElementById('error').classList.remove('show');
+      }
+
+      function showSuccess(message) {
+        const el = document.getElementById('success');
+        el.textContent = message;
+        el.classList.add('show');
+      }
+
+      function hideSuccess() {
+        document.getElementById('success').classList.remove('show');
+      }
+
+      function loadArticle(topic) {
+        document.getElementById('topic').value = topic;
+        window.scrollTo(0, 0);
+      }
+
+      // Load stats on page load
+      window.addEventListener('load', loadStats);
+    </script>
+  </body>
+</html>

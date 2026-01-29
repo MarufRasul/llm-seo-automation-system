@@ -1,1 +1,6 @@
-pip install openai python-dotenv
+langchain
+langchain-openai
+python-dotenv
+openai
+flask
+flask-cors

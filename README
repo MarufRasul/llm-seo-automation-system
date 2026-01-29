@@ -1,0 +1,261 @@
+AI LLM SEO Automation System
+Prototype for AI Visibility (GEO) Content Engineering
+Project Overview
+
+This project is a prototype AI-driven content automation system designed to increase LLM / AI visibility (GEO — Generative Engine Optimization).
+
+Instead of optimizing content only for Google, the system is built to:
+
+Intentionally make AI systems (like ChatGPT) use our articles as answers.
+
+The platform automatically:
+
+Plans content
+
+Researches entities & queries
+
+Generates articles
+
+Optimizes them for AI understanding
+
+Scores their AI visibility
+
+Learns from results
+
+Plans the next content
+
+This is an AI Content Operating System, not just a blog generator.
+
+Project Goal
+
+To design and implement an automated system that:
+
+Strategically selects content topics
+Generates AI-optimized articles
+Expands semantic knowledge coverage
+Improves probability of being cited by LLMs
+Demonstrates scalable architecture potential
+
+Core Concept: LLM SEO (GEO)
+
+Traditional SEO → optimized for search engines
+LLM SEO (GEO) → optimized for AI answer engines
+
+We optimize for:
+
+AI comprehension
+
+Entity clarity
+
+Structured knowledge
+
+Question coverage
+
+Semantic relationships
+
+Trust & expertise signals (EEAT)
+
+System Architecture
+User Topic
+
+Research Agent
+
+Entity SEO Agent
+
+Brand Strategy Agent
+
+Article Agent
+
+AI SEO Scoring Layer
+
+Memory Storage
+
+Site Brain (Next Content Planner)
+
+System Layers
+Research Layer
+
+Collects knowledge around the topic:
+
+Use cases
+
+Subtopics
+
+Related questions
+
+Competitor concepts
+
+Expands semantic coverage.
+
+Entity SEO Layer
+
+Extracts:
+
+Brands
+
+Products
+
+Technologies
+
+Features
+
+Related concepts
+
+Builds an entity graph AI systems rely on.
+
+Brand Strategy Layer
+
+Defines:
+
+Tone of voice
+
+Audience
+
+Positioning
+
+Content angle
+
+Emotional triggers
+
+Ensures consistent content identity.
+
+Article Generation Layer
+
+Creates structured articles:
+
+H1 / H2 / H3 hierarchy
+
+FAQ blocks
+
+Practical use cases
+
+Entity-rich content
+
+Designed for AI parsing, not only humans.
+
+AI SEO Scoring Layer
+
+Evaluates article quality based on:
+
+Factor Purpose
+Content Depth Topic coverage
+Semantic SEO Entity richness
+Structure AI readability
+EEAT Trust & authority
+Keyword Optimization Query alignment
+AI Visibility LLM usability
+
+Memory Layer
+
+Stores:
+SEO score
+Entities
+Queries
+FAQ
+
+Internal linking ideas
+
+Allows system learning & strategic planning.
+
+Site Brain Layer (Strategic AI)
+
+This is the most advanced part.
+
+The system analyzes previous article performance and decides:
+
+“What should we write next to increase AI answer coverage?”
+
+It identifies:
+
+Content gaps
+
+Missing queries
+
+Weak entity areas
+
+Authority-building topics
+
+This turns the system into a self-evolving AI content strategy engine.
+Workflow Example
+
+Input Topic:
+LG Gram laptop for students
+
+System output:
+
+AI-optimized article
+
+Extracted entities
+
+AI SEO score
+
+FAQ block
+
+Query coverage
+
+Internal linking suggestions
+
+Next article plan (Site Brain)
+
+Why This Matters
+
+AI systems increasingly act as:
+
+Answer engines
+
+Research assistants
+
+Decision helpers
+
+Companies need content that is:
+
+Not just searchable
+But AI-usable
+
+This prototype shows how to build a scalable AI visibility system.
+
+Tech Stack
+
+Python
+
+LangChain
+
+OpenAI LLM
+
+Modular Agent Architecture
+
+Workflow-based orchestration
+
+Innovation Points
+
+AI-first SEO approach
+Entity-driven content modeling
+Automated strategy planning
+AI scoring system
+Self-improving content loop
+
+Future Expansion Potential
+
+Real search data integration
+
+Automated publishing
+
+AI visibility monitoring
+
+Multi-brand scaling
+
+Knowledge graph database
+
+UI dashboard
+
+Conclusion
+
+This project demonstrates a working prototype of an AI-native content automation system built for:
+
+LLM visibility, semantic authority, and scalable AI-driven content strategy.
+
+It proves both:
+
+Technical capability
+
+Architectural scalability potential
