@@ -3,6 +3,7 @@ Flask API Server for AI SEO Blog Generator
 """
 import sys
 import os
+from datetime import datetime
 
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -14,6 +15,7 @@ from app.workflows.article_workflow import ArticleWorkflow
 from app.outputs.storage_service import StorageService
 from app.config.brand_configs import BRAND_CONFIGS, get_brand_topics
 from app.batch.batch_generator import BatchContentGenerator
+from app.agents.data_freshness_agent import DataFreshnessAgent
 
 app = Flask(__name__)
 CORS(app)
@@ -22,6 +24,7 @@ CORS(app)
 workflow = ArticleWorkflow()
 storage = StorageService("outputs")
 batch_generator = BatchContentGenerator()
+freshness_agent = DataFreshnessAgent()
 storage = StorageService("outputs")
 
 
@@ -110,14 +113,22 @@ def get_article_detail(topic):
 
         for file in files:
             if topic.lower().replace(" ", "_") in file.lower():
-                with open(os.path.join(output_dir, file), "r", encoding="utf-8") as f:
+                file_path = os.path.join(output_dir, file)
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
+
+                # Get file stats
+                file_stat = os.stat(file_path)
+                created_time = datetime.fromtimestamp(file_stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
 
                 return jsonify({
                     "success": True,
                     "topic": topic,
                     "content": content,
-                    "file": file
+                    "file_path": file_path,
+                    "file_name": file,
+                    "size": file_stat.st_size,
+                    "created": created_time
                 }), 200
 
         return jsonify({
@@ -151,6 +162,87 @@ def get_memory():
             "topics": [],
             "count": 0
         }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+# ============= DATA FRESHNESS & VALIDATION ENDPOINTS =============
+
+@app.route("/api/validate/freshness", methods=["POST"])
+def validate_freshness():
+    """
+    Validate article data freshness (2026-current standards)
+    POST /api/validate/freshness
+    {
+        "article": "Article text here...",
+        "product": "LG Gram"
+    }
+    """
+    try:
+        data = request.json
+        article = data.get("article", "").strip()
+        product = data.get("product", "Unknown").strip()
+
+        if not article:
+            return jsonify({"error": "Article content is required"}), 400
+
+        # Validate freshness
+        freshness_report = freshness_agent.validate_article_freshness(article)
+        
+        # Extract named entities
+        entities = freshness_agent.extract_named_entities(article, product)
+
+        return jsonify({
+            "success": True,
+            "product": product,
+            "freshness": freshness_report,
+            "named_entities": entities
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/validate/article/<topic>", methods=["GET"])
+def validate_article(topic):
+    """
+    Validate existing saved article for data freshness
+    GET /api/validate/article/{topic}
+    """
+    try:
+        output_dir = "outputs"
+        files = os.listdir(output_dir)
+
+        for file in files:
+            if topic.lower().replace(" ", "_") in file.lower():
+                file_path = os.path.join(output_dir, file)
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                # Validate freshness
+                freshness_report = freshness_agent.validate_article_freshness(content)
+                entities = freshness_agent.extract_named_entities(content, topic)
+
+                return jsonify({
+                    "success": True,
+                    "topic": topic,
+                    "file": file,
+                    "freshness": freshness_report,
+                    "named_entities": entities,
+                    "freshness_score": freshness_report.get("freshness_score", 0)
+                }), 200
+
+        return jsonify({
+            "success": False,
+            "error": "Article not found"
+        }), 404
 
     except Exception as e:
         return jsonify({

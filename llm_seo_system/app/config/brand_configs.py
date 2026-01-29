@@ -21,7 +21,19 @@ BRAND_CONFIGS = {
             "LG Gram vs MacBook Air",
             "LG Gram durability review"
         ],
-        "topics_count": 5
+        "topics_count": 5,
+        # NEW: Data sources for automatic scraping
+        "official_website": "https://www.lge.co.kr",
+        "product_pages": [
+            "https://www.lge.co.kr/category/notebook",
+            "https://www.lge.co.kr"
+        ],
+        "data_selectors": {
+            "specifications": ".specs-section",
+            "price": ".price",
+            "features": ".features-list",
+            "reviews": ".customer-reviews"
+        }
     },
     
     "dongwon_salmon": {
@@ -53,7 +65,20 @@ BRAND_CONFIGS = {
             "Premium salmon quality guide",
             "Dongwon salmon omega-3 content"
         ],
-        "topics_count": 8
+        "topics_count": 8,
+        # NEW: Data sources for automatic scraping
+        "official_website": "https://www.dongwonmall.com",
+        "product_pages": [
+            "https://www.dongwonmall.com/category/main.do?cate_id=0111007600010003",
+            "https://www.dongwonmall.com"
+        ],
+        "data_selectors": {
+            "product_info": ".product-info",
+            "nutrition": ".nutrition-facts",
+            "price": ".product-price",
+            "availability": ".stock-status",
+            "specifications": ".product-specs"
+        }
     },
     
     "doshinji_ceramics": {
@@ -85,7 +110,21 @@ BRAND_CONFIGS = {
             "Coffee tasting with ceramic cups",
             "Doshinji ceramic bowls for Asian cuisine"
         ],
-        "topics_count": 8
+        "topics_count": 8,
+        # NEW: Data sources for automatic scraping
+        "official_website": "https://doshinji.com",
+        "product_pages": [
+            "https://doshinji.com/products",
+            "https://doshinji.com/collections/ceramics",
+            "https://doshinji.com/collections/tableware"
+        ],
+        "data_selectors": {
+            "product_info": ".product-card",
+            "price": ".product-price",
+            "materials": ".materials",
+            "craftsmanship": ".description",
+            "reviews": ".reviews-section"
+        }
     }
 }
 
