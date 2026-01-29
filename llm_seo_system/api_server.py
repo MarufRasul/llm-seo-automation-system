@@ -12,12 +12,16 @@ from flask_cors import CORS
 import json
 from app.workflows.article_workflow import ArticleWorkflow
 from app.outputs.storage_service import StorageService
+from app.config.brand_configs import BRAND_CONFIGS, get_brand_topics
+from app.batch.batch_generator import BatchContentGenerator
 
 app = Flask(__name__)
 CORS(app)
 
 # Initialize services
 workflow = ArticleWorkflow()
+storage = StorageService("outputs")
+batch_generator = BatchContentGenerator()
 storage = StorageService("outputs")
 
 
@@ -148,6 +152,172 @@ def get_memory():
             "count": 0
         }), 200
 
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+# ============= BATCH GENERATION ENDPOINTS =============
+
+@app.route("/api/brands", methods=["GET"])
+def get_brands():
+    """Get list of available brands"""
+    return jsonify({
+        "success": True,
+        "brands": list(BRAND_CONFIGS.keys()),
+        "count": len(BRAND_CONFIGS),
+        "details": {
+            key: {
+                "name": config["brand_name"],
+                "category": config["category"],
+                "topics_count": config["topics_count"]
+            }
+            for key, config in BRAND_CONFIGS.items()
+        }
+    }), 200
+
+
+@app.route("/api/brand/<brand_key>/topics", methods=["GET"])
+def get_brand_topics_api(brand_key):
+    """Get content topics for specific brand"""
+    topics = get_brand_topics(brand_key)
+    
+    if not topics:
+        return jsonify({
+            "success": False,
+            "error": "Brand not found"
+        }), 404
+    
+    return jsonify({
+        "success": True,
+        "brand": brand_key,
+        "topics": topics,
+        "count": len(topics)
+    }), 200
+
+
+@app.route("/api/batch/generate", methods=["POST"])
+def batch_generate():
+    """
+    Generate batch content for multiple brands
+    POST /api/batch/generate
+    {
+        "brands": ["dongwon_salmon", "doshinji_ceramics"],
+        "topics_per_brand": 2
+    }
+    """
+    try:
+        data = request.json
+        brands = data.get("brands", list(BRAND_CONFIGS.keys()))
+        topics_per_brand = data.get("topics_per_brand", 2)
+        
+        print(f"\n📦 Batch generation started: {len(brands)} brands, {topics_per_brand} topics each")
+        
+        # Create new generator for this batch
+        generator = BatchContentGenerator()
+        results = generator.generate_batch(brands=brands, topics_per_brand=topics_per_brand)
+        
+        return jsonify({
+            "success": True,
+            "batch_id": generator.timestamp,
+            "total_articles": len(results),
+            "brands_processed": len(brands),
+            "articles_per_brand": topics_per_brand,
+            "status": "completed"
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Batch generation error: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/batch/<batch_id>/status", methods=["GET"])
+def batch_status(batch_id):
+    """Get batch generation status"""
+    # Check if batch report exists
+    report_path = f"batch_reports/batch_report_{batch_id}.json"
+    
+    if os.path.exists(report_path):
+        with open(report_path, "r", encoding="utf-8") as f:
+            report = json.load(f)
+        
+        return jsonify({
+            "success": True,
+            "batch_id": batch_id,
+            "status": "completed",
+            "report": report
+        }), 200
+    
+    return jsonify({
+        "success": False,
+        "error": "Batch not found"
+    }), 404
+
+
+@app.route("/api/batch/dongwon", methods=["POST"])
+def batch_dongwon():
+    """
+    Generate Dongwon (salmon) content
+    POST /api/batch/dongwon
+    {
+        "topics_limit": 3
+    }
+    """
+    try:
+        data = request.json or {}
+        topics_limit = data.get("topics_limit", 3)
+        
+        print(f"\n🐟 Dongwon salmon content generation: {topics_limit} topics")
+        
+        generator = BatchContentGenerator()
+        results = generator.generate_for_brand("dongwon_salmon", topics_limit=topics_limit)
+        
+        return jsonify({
+            "success": True,
+            "brand": "Dongwon (동원)",
+            "articles_generated": len(results),
+            "batch_id": generator.timestamp,
+            "timestamp": generator.timestamp
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/batch/doshinji", methods=["POST"])
+def batch_doshinji():
+    """
+    Generate Doshinji (ceramics) content
+    POST /api/batch/doshinji
+    {
+        "topics_limit": 3
+    }
+    """
+    try:
+        data = request.json or {}
+        topics_limit = data.get("topics_limit", 3)
+        
+        print(f"\n🍶 Doshinji ceramics content generation: {topics_limit} topics")
+        
+        generator = BatchContentGenerator()
+        results = generator.generate_for_brand("doshinji_ceramics", topics_limit=topics_limit)
+        
+        return jsonify({
+            "success": True,
+            "brand": "Doshinji (도슨티)",
+            "articles_generated": len(results),
+            "batch_id": generator.timestamp,
+            "timestamp": generator.timestamp
+        }), 200
+        
     except Exception as e:
         return jsonify({
             "success": False,
