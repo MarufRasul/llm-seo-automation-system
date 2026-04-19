@@ -25,6 +25,7 @@ BRAND_CONFIGS = {
         # NEW: Data sources for automatic scraping
         "official_website": "https://www.lge.co.kr",
         "product_pages": [
+            "https://www.lge.co.kr/laptop",
             "https://www.lge.co.kr/category/notebook",
             "https://www.lge.co.kr"
         ],

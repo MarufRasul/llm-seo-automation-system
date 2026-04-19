@@ -9,6 +9,7 @@ class BrandStrategy:
         )
 
     def get_strategy(self, topic: str) -> str:
+        print(f"🎯 BrandStrategy: creating brand strategy for '{topic}'")
         prompt = f"""
 You are a brand strategy expert.
 

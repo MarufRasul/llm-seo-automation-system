@@ -26,7 +26,8 @@ class SchemaGenerator:
         publication_date: str = None,
         modified_date: str = None,
         image_url: str = None,
-        word_count: int = None
+        word_count: int = None,
+        url: str = None
     ) -> Dict:
         """
         Generate Article schema for Google and AI models.
@@ -48,7 +49,7 @@ class SchemaGenerator:
             },
             "datePublished": publication_date,
             "dateModified": modified_date,
-            "inLanguage": "en-US"
+            "inLanguage": "ko-KR"
         }
         
         if image_url:
@@ -62,6 +63,13 @@ class SchemaGenerator:
         if word_count:
             schema["wordCount"] = word_count
             
+        if url:
+            schema["url"] = url
+            schema["mainEntityOfPage"] = {
+                "@type": "WebPage",
+                "@id": url
+            }
+
         return schema
     
     
@@ -275,11 +283,13 @@ def generate_full_schema_set(
     brand_name: str,
     faqs: List[Dict],
     breadcrumbs: List[Dict],
+    page_url: str = None,
     comparison_items: List[Dict] = None
 ) -> List[Dict]:
     """
     Generate complete schema set for article.
     """
+    print(f"📄 SchemaGenerator: generating full JSON-LD schema set for '{article_title}'")
     
     schemas = []
     

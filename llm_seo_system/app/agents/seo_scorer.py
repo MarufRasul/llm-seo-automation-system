@@ -9,6 +9,7 @@ class SEOScorer:
         )
 
     def score_article(self, article: str, topic: str) -> str:
+        print(f"📊 SEOScorer: scoring article for topic '{topic}'")
         prompt = f"""
 You are an advanced AI SEO auditor.
 

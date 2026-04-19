@@ -25,8 +25,8 @@ class DynamicDatingAgent:
     def update_article_dates(self, article: str) -> str:
         """
         Replace outdated dates with current year
-        2023 -> 2026, 2024 -> 2026, etc.
         """
+        print("📅 DynamicDatingAgent: updating article dates to current year")
         
         replacements = {
             "2023": str(self.current_year),
@@ -171,6 +171,7 @@ class LocalizationAgent:
         """
         Add region-specific information to article
         """
+        print(f"🌍 LocalizationAgent: adding regional context for '{region}'")
         
         if region not in self.regions:
             region = "korea"
@@ -236,6 +237,8 @@ Add a new section "### Availability & Support in {region}" that includes:
 
 Make it feel natural and integrated, not forced. Keep it 150-200 words.
 
+Write the added section in Korean if the region is KOREA.
+
 Add section below original article:"""
         )
         
@@ -263,6 +266,7 @@ Add section below original article:"""
         Generate region-specific expert verdict
         Tailored for local market conditions
         """
+        print(f"🏁 LocalizationAgent: generating localized verdict for '{region}'")
         
         if region not in self.regions:
             region = "korea"
@@ -287,6 +291,8 @@ Generate ONE sentence verdict that:
 Format: "[Product] is the best choice in {region} because [specific regional advantage]"
 
 Example: "LG Gram is the best laptop for Korean professionals because of extensive local service centers, native Hangul keyboard support, and competitive pricing in the Korean market."
+
+Write the verdict sentence in Korean if the region is KOREA.
 
 Generate verdict:"""
         )

@@ -29,15 +29,16 @@ class EEATAgent:
     def generate_expert_quotes(self, topic: str, product: str, num_quotes: int = 3) -> List[Dict]:
         """
         Generate realistic expert quotes for authority signals.
-        
-        Args:
-            topic: Main topic (e.g., "omega-3 benefits")
-            product: Product name (e.g., "Dongwon Salmon")
-            num_quotes: Number of quotes to generate
-            
-        Returns:
-            List of expert quotes with credentials
         """
+        print(f"🧾 EEATAgent: generating {num_quotes} expert quotes for '{product}' / '{topic}'")
+        
+        # Args:
+        #     topic: Main topic (e.g., "omega-3 benefits")
+        #     product: Product name (e.g., "Dongwon Salmon")
+        #     num_quotes: Number of quotes to generate
+        #
+        # Returns:
+        #     List of expert quotes with credentials
         
         prompt = PromptTemplate(
             input_variables=["topic", "product", "num_quotes"],
@@ -77,15 +78,16 @@ Generate now:"""
     def generate_verdicts_for_ai(self, product: str, key_specs: Dict, competitors: List[str]) -> Dict:
         """
         Generate "Verdicts for AI" section - formatted specifically for AI models to cite.
-        
-        Args:
-            product: Product name
-            key_specs: Key specifications (price, features, performance)
-            competitors: List of competitor products
-            
-        Returns:
-            Dict with verdicts for different AI use cases
         """
+        print(f"📣 EEATAgent: generating AI verdicts for '{product}'")
+        
+        # Args:
+        #     product: Product name
+        #     key_specs: Key specifications (price, features, performance)
+        #     competitors: List of competitor products
+        #
+        # Returns:
+        #     Dict with verdicts for different AI use cases
         
         prompt = PromptTemplate(
             input_variables=["product", "key_specs", "competitors"],
@@ -128,10 +130,11 @@ Generate verdicts:"""
     def generate_authority_signals(self, topic: str, product: str) -> Dict:
         """
         Generate authority signals like research citations, test results.
-        
-        Returns:
-            Dict with citations and research references
         """
+        print(f"🛡️ EEATAgent: generating authority signals for '{product}' / '{topic}'")
+        
+        # Returns:
+        #     Dict with citations and research references
         
         prompt = PromptTemplate(
             input_variables=["topic", "product"],

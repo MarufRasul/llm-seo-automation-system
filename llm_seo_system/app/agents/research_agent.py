@@ -33,8 +33,8 @@ class ResearchAgent:
                 brand_config = get_brand_config(brand_key)
                 if brand_config:
                     website_data = get_website_data(brand_config)
-                    if website_data.get("products") or website_data.get("specifications"):
-                        data_sources.append(f"\n\n## OFFICIAL WEBSITE DATA (Real-time from {brand_config.get('official_website')}):\n{json.dumps(website_data, indent=2)}")
+                    if website_data.get("products") or website_data.get("specifications") or website_data.get("selected_content"):
+                        data_sources.append(f"\n\n## OFFICIAL WEBSITE DATA (Real-time from {brand_config.get('official_website')}):\n{json.dumps(website_data, indent=2, ensure_ascii=False)}")
                         print(f"✅ Website data fetched successfully")
             except Exception as e:
                 print(f"⚠️ Website scraping failed: {e}, falling back to other sources")
@@ -78,4 +78,5 @@ Return:
 Write in bullet points. No fluff. Prefer specific numbers and current year data (2025/2026).
 """
         response = self.llm.invoke(prompt)
+        print(f"✅ ResearchAgent: research completed for '{topic}'")
         return response.content

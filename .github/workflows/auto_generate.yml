@@ -1,0 +1,37 @@
+name: Auto Generate GEO Content
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # каждый день в 17:00 KST / 08:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  auto-generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run automated generation
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
+          GITHUB_PAGES_URL: ${{ secrets.GITHUB_PAGES_URL }}
+          AUTO_RUN_MODE: brand_batch
+          AUTO_RUN_BRANDS: lg_notebook,dongwon_salmon,doshinji_ceramics
+          AUTO_RUN_TOPICS_PER_BRAND: 2
+        run: |
+          python llm_seo_system/auto_runner.py

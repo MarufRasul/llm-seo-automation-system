@@ -34,12 +34,13 @@ class WebScraperAgent:
         self.max_retries = 3
     
     
-    def scrape_website(self, url: str) -> Optional[Dict]:
+    def scrape_website(self, url: str, selectors: dict | None = None) -> Optional[Dict]:
         """
         Scrape a single website with retry logic.
         
         Args:
             url: Website URL to scrape
+            selectors: Optional selectors for targeted content extraction
             
         Returns:
             Dict with scraped content or None if failed
@@ -70,6 +71,8 @@ class WebScraperAgent:
                     # Extract product specs
                     specs = self._extract_specs(soup)
                     
+                    selected_content = self._extract_by_selectors(soup, selectors) if selectors else {}
+                    
                     return {
                         "url": url,
                         "status": "success",
@@ -77,6 +80,7 @@ class WebScraperAgent:
                         "json_ld": json_ld,
                         "tables": tables,
                         "specs": specs,
+                        "selected_content": selected_content,
                         "timestamp": datetime.now().isoformat()
                     }
                 else:
@@ -130,6 +134,20 @@ class WebScraperAgent:
         return tables
     
     
+    def _extract_by_selectors(self, soup: BeautifulSoup, selectors: dict) -> Dict:
+        """Extract specific fields using provided CSS selectors."""
+        extracted = {}
+
+        for key, selector in selectors.items():
+            if not selector:
+                continue
+            elements = soup.select(selector)
+            if not elements:
+                continue
+            extracted[key] = "\n\n".join([elem.get_text(separator='\n', strip=True) for elem in elements])
+
+        return extracted
+
     def _extract_specs(self, soup: BeautifulSoup) -> Dict:
         """Extract product specifications from common patterns."""
         
@@ -200,8 +218,9 @@ class WebScraperAgent:
             "timestamp": datetime.now().isoformat()
         }
         
+        selectors = brand_config.get("data_selectors", {})
         for page_url in product_pages:
-            page_data = self.scrape_website(page_url)
+            page_data = self.scrape_website(page_url, selectors=selectors)
             
             if page_data:
                 aggregated_data["pages"].append(page_data)
@@ -239,6 +258,7 @@ class WebScraperAgent:
             "products": [],
             "materials": [],
             "features": [],
+            "selected_content": scraped_data.get("selected_content", {}),
             "timestamp": datetime.now().isoformat()
         }
         

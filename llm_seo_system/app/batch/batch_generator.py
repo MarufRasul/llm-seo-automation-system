@@ -68,6 +68,37 @@ class BatchContentGenerator:
         
         return brand_results
     
+    def generate_for_niches(self, niches=None):
+        """
+        Generate articles from niche prompts using topic discovery.
+
+        Args:
+            niches: List of niche prompts.
+        """
+        if niches is None:
+            niches = []
+
+        niche_results = []
+        for idx, niche in enumerate(niches, 1):
+            print(f"\n{'='*60}")
+            print(f"🎯 Generating content for niche [{idx}/{len(niches)}]: {niche}")
+            print(f"{'='*60}")
+            try:
+                result = self.workflow.run(topic=None, niche=niche)
+                enriched_result = {
+                    "niche": niche,
+                    "topic": result.get("topic"),
+                    "timestamp": self.timestamp,
+                    **result
+                }
+                niche_results.append(enriched_result)
+                self.results.append(enriched_result)
+                print(f"✅ Generated niche article: {result.get('topic')}")
+            except Exception as e:
+                print(f"❌ Error generating for niche '{niche}': {str(e)}")
+                continue
+
+        return niche_results
     
     def generate_batch(self, brands=None, topics_per_brand=3):
         """

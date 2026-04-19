@@ -8,6 +8,7 @@ class SiteBrainAgent:
         """
         Analyzes previous article performance and suggests next content strategy
         """
+        print(f"🧭 SiteBrainAgent: planning next articles after '{topic}'")
 
         prompt = f"""
 You are an AI Content Strategist.

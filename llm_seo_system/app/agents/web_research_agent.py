@@ -27,7 +27,12 @@ class WebResearchAgent:
         self.base_url = "https://serpapi.com/search"
         self.llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
         
-    
+    def _get_site_filter(self, brand: str):
+        """Return a site filter and geo for SerpAPI based on the brand."""
+        if brand and "lg" in brand.lower() and "gram" in brand.lower():
+            return "site:lge.co.kr/category/notebook", "kr"
+        return "site:official OR site:.com", "us"
+
     def search_product_specs(
         self,
         product_name: str,
@@ -46,12 +51,14 @@ class WebResearchAgent:
             Dict with specs, prices, availability
         """
         
-        # Build search query prioritizing official sources
+        # Build search query prioritizing official sources.
+        # For LG Gram research, restrict SerpAPI to the LG notebook category page.
         query = f"{brand} {product_name} specifications"
         if product_type:
             query += f" {product_type}"
-        
-        query += " site:official OR site:.com"
+
+        site_filter, gl_value = self._get_site_filter(brand)
+        query += f" {site_filter}"
         
         try:
             response = requests.get(
@@ -60,7 +67,7 @@ class WebResearchAgent:
                     "q": query,
                     "api_key": self.api_key,
                     "num": 10,
-                    "gl": "us"
+                    "gl": gl_value
                 },
                 timeout=10
             )
@@ -85,6 +92,8 @@ class WebResearchAgent:
         """
         
         query = f"{brand} {product_name} price 2025 2026"
+        site_filter, gl_value = self._get_site_filter(brand)
+        query += f" {site_filter}"
         
         try:
             response = requests.get(
@@ -93,7 +102,7 @@ class WebResearchAgent:
                     "q": query,
                     "api_key": self.api_key,
                     "num": 5,
-                    "gl": "us"
+                    "gl": gl_value
                 },
                 timeout=10
             )
@@ -118,6 +127,8 @@ class WebResearchAgent:
         """
         
         query = f"{brand} {product_name} reviews ratings 2025"
+        site_filter, gl_value = self._get_site_filter(brand)
+        query += f" {site_filter}"
         
         try:
             response = requests.get(
@@ -126,7 +137,7 @@ class WebResearchAgent:
                     "q": query,
                     "api_key": self.api_key,
                     "num": 5,
-                    "gl": "us"
+                    "gl": gl_value
                 },
                 timeout=10
             )
@@ -144,13 +155,16 @@ class WebResearchAgent:
     def search_competitors(
         self,
         product_name: str,
-        category: str
+        category: str,
+        brand: str = None
     ) -> Dict:
         """
         Search for competitor products in same category.
         """
         
         query = f"best {category} {product_name} 2025 comparison"
+        site_filter, gl_value = self._get_site_filter(brand)
+        query += f" {site_filter}"
         
         try:
             response = requests.get(
@@ -159,7 +173,7 @@ class WebResearchAgent:
                     "q": query,
                     "api_key": self.api_key,
                     "num": 10,
-                    "gl": "us"
+                    "gl": gl_value
                 },
                 timeout=10
             )
@@ -186,6 +200,8 @@ class WebResearchAgent:
         query = f"{category} trends 2025 2026"
         if keyword:
             query = f"{keyword} {query}"
+        site_filter, gl_value = self._get_site_filter(category)
+        query += f" {site_filter}"
         
         try:
             response = requests.get(
@@ -194,7 +210,7 @@ class WebResearchAgent:
                     "q": query,
                     "api_key": self.api_key,
                     "num": 8,
-                    "gl": "us"
+                    "gl": gl_value
                 },
                 timeout=10
             )
@@ -392,7 +408,7 @@ Extract:"""
             "specs": self.search_product_specs(product_name, brand, product_type),
             "pricing": self.search_pricing(product_name, brand),
             "reviews": self.search_reviews_and_ratings(product_name, brand),
-            "competitors": self.search_competitors(product_name, "product"),
+            "competitors": self.search_competitors(product_name, "product", brand),
             "trends": self.search_industry_trends(brand or product_name)
         }
         

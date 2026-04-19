@@ -6,6 +6,7 @@ class InternalLinkingAgent:
         self.llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
 
     def generate_links(self, topic: str, existing_articles: list) -> str:
+        print(f"🔗 InternalLinkingAgent: generating internal links for '{topic}'")
         prompt = f"""
 You are an SEO internal linking strategist.
 

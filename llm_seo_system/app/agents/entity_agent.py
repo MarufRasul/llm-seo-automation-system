@@ -8,6 +8,7 @@ class EntityAgent:
         )
 
     def extract_entities(self, research_data: str) -> str:
+        print("📌 EntityAgent: extracting SEO entities from research data")
         prompt = f"""
 You are an SEO entity extraction system.
 

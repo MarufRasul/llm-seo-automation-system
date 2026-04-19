@@ -25,14 +25,15 @@ class DataFreshnessAgent:
     def get_current_specs(self, product: str, category: str) -> Dict:
         """
         Get 2026-current specifications for product
-        
-        Args:
-            product: Product name (e.g., "LG Gram")
-            category: Product category (e.g., "laptop", "salmon", "ceramics")
-            
-        Returns:
-            Dict with current specs and SKUs
         """
+        print(f"📊 DataFreshnessAgent: fetching current specs for '{product}' category '{category}'")
+        
+        # Args:
+        #     product: Product name (e.g., "LG Gram")
+        #     category: Product category (e.g., "laptop", "salmon", "ceramics")
+        #
+        # Returns:
+        #     Dict with current specs and SKUs
         
         # 2026 current reference data
         current_reference = {
@@ -121,8 +122,10 @@ Return as JSON:
     def extract_named_entities(self, article: str, product_name: str) -> Dict[str, List[str]]:
         """
         Extract Named Entities from article
-        Focus on: SKUs, model numbers, specific configurations
         """
+        print(f"🔍 DataFreshnessAgent: extracting named entities for '{product_name}'")
+        
+        # Focus on: SKUs, model numbers, specific configurations
         
         prompt = PromptTemplate(
             input_variables=["article", "product"],
@@ -172,9 +175,10 @@ Return JSON:
     ) -> str:
         """
         Generate Final Recommendation/Expert Verdict block for AI systems
-        
-        Format: One crisp sentence that LLM will cite directly
         """
+        print(f"🏷️ DataFreshnessAgent: generating expert verdict block for '{product}'")
+        
+        # Format: One crisp sentence that LLM will cite directly
         
         prompt = PromptTemplate(
             input_variables=[
@@ -215,9 +219,10 @@ Generate verdict:"""
     def validate_article_freshness(self, article: str, publication_year: int = 2026) -> Dict:
         """
         Full validation of article data freshness
-        
-        Returns freshness score and recommendations
         """
+        print(f"✅ DataFreshnessAgent: validating article freshness for year {publication_year}")
+        
+        # Returns freshness score and recommendations
         
         staleness_indicators = {
             "11th generation Intel": "STALE - Use Intel Core Ultra instead",
@@ -255,6 +260,7 @@ Generate verdict:"""
         """
         Replace outdated processor references with 2026-current wording.
         """
+        print("🔧 DataFreshnessAgent: normalizing processor mentions to 2026 standards")
         replacements = {
             "11th or 12th generation": "Intel Core Ultra (2025/2026 generation)",
             "11th or 12th Gen": "Intel Core Ultra (2025/2026 generation)",

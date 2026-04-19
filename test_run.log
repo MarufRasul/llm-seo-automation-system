@@ -1,0 +1,148 @@
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:app.agents.web_scraper_agent:📥 Scraping LG Gram website...
+INFO:app.agents.web_scraper_agent:🔍 Starting brand scrape for LG Gram
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr/laptop (attempt 1/3)
+WARNING:app.agents.web_scraper_agent:⚠️ Status 404 for https://www.lge.co.kr/laptop
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr/laptop (attempt 2/3)
+WARNING:app.agents.web_scraper_agent:⚠️ Status 404 for https://www.lge.co.kr/laptop
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr/laptop (attempt 3/3)
+WARNING:app.agents.web_scraper_agent:⚠️ Status 404 for https://www.lge.co.kr/laptop
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr/category/notebook (attempt 1/3)
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr (attempt 1/3)
+INFO:app.agents.web_scraper_agent:✅ Successfully scraped 2 pages
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:app.agents.web_scraper_agent:📥 Scraping LG Gram website...
+INFO:app.agents.web_scraper_agent:🔍 Starting brand scrape for LG Gram
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr/laptop (attempt 1/3)
+WARNING:app.agents.web_scraper_agent:⚠️ Status 404 for https://www.lge.co.kr/laptop
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr/laptop (attempt 2/3)
+WARNING:app.agents.web_scraper_agent:⚠️ Status 404 for https://www.lge.co.kr/laptop
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr/laptop (attempt 3/3)
+WARNING:app.agents.web_scraper_agent:⚠️ Status 404 for https://www.lge.co.kr/laptop
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr/category/notebook (attempt 1/3)
+INFO:app.agents.web_scraper_agent:🔍 Scraping https://www.lge.co.kr (attempt 1/3)
+INFO:app.agents.web_scraper_agent:✅ Successfully scraped 2 pages
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+
+LLM SEO Automation Runner
+Запуск:  2026-04-19T08:28:31
+AUTO_RUN_MODE=lg_daily
+
+=== Ежедневная генерация LG 노트북 для ниши: LG전자 노트북 ===
+🧠 Discovering best topic for niche: LG전자 노트북
+🧠 TopicDiscoveryAgent: discovering topic for niche 'LG전자 노트북'
+🔎 Discovering topics for niche: LG전자 노트북
+
+🎯 QuerySimulatorAgent: Collecting REAL user questions for 'LG전자 노트북'
+🔍 Fetching REAL questions from Google 'People Also Ask' for 'LG전자 노트북'...
+👥 Searching Reddit for real user questions about 'LG전자 노트북'...
+   ✓ 여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?
+🎥 Searching YouTube for video titles about 'LG전자 노트북'...
+📊 Not enough real data, generating simulated questions...
+✅ Collected 11 real user questions
+
+✅ Discovered topic: 여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?
+Researching...
+📥 Scraping official website for LG Gram...
+📡 Fetching real-time data via Google Search for LG Gram...
+🔍 Researching LG Gram 여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?...
+✅ Google Search data fetched successfully
+✅ ResearchAgent: research completed for '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+Brand strategy...
+🎯 BrandStrategy: creating brand strategy for '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+Extracting SEO entities...
+📌 EntityAgent: extracting SEO entities from research data
+📊 DataFreshnessAgent: fetching current specs for '여행' category 'laptop'
+Generating article...
+📝 ArticleAgent: generating article for topic '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?' in Korean
+Generating SEO search queries...
+🔎 SEOAgent: generating search queries for '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+🔧 SEOAgent: sending prompt to SEO model
+Generating FAQ...
+❓ SEOAgent: generating FAQ section for '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+🔧 SEOAgent: sending prompt to SEO model
+🔧 DataFreshnessAgent: normalizing processor mentions to 2026 standards
+SEO optimizing...
+🛠️ SEOAgent: optimizing article using SEO data
+🔧 SEOAgent: sending prompt to SEO model
+🔧 DataFreshnessAgent: normalizing processor mentions to 2026 standards
+Validating data freshness (2026-current standards)...
+✅ DataFreshnessAgent: validating article freshness for year 2026
+🔍 DataFreshnessAgent: extracting named entities for '여행'
+🏷️ DataFreshnessAgent: generating expert verdict block for '여행'
+Adding EEAT signals (expert quotes, authority)...
+🧾 EEATAgent: generating 2 expert quotes for '여행' / '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+🛡️ EEATAgent: generating authority signals for '여행' / '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+Generating AI verdicts (quote-ready statements)...
+📌 VerdictGenerator: generating complete verdict section for '여행'
+🏁 VerdictGenerator: generating AI verdicts for '여행'
+📌 VerdictGenerator: generating use case verdicts for '여행'
+Generating JSON-LD schemas...
+📄 SchemaGenerator: generating full JSON-LD schema set for '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+Scoring article SEO quality...
+📊 SEOScorer: scoring article for topic '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+ Generating internal links...
+🔗 InternalLinkingAgent: generating internal links for '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+📅 Updating article dates to current year...
+📅 DynamicDatingAgent: updating article dates to current year
+🌏 Adding regional localization for Korea...
+🌍 LocalizationAgent: adding regional context for 'korea'
+🏁 LocalizationAgent: generating localized verdict for 'korea'
+✨ Regional Verdict: ### KOREA Regional Verdict
+
+여행은 한국에서 최고의 선택입니다. 왜냐하면 다양한 온라인 소매업체인 GMarket, Coupang, Naver, 11번가에서 쉽게 구매할 수 있으며, 1-2년의 표준 한국 보증과 지원 옵션이 제공되기 때문입니다.
+
+Rendering HTML output...
+[MemoryService] saved topic: 여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?
+ Planning next articles...
+🧭 SiteBrainAgent: planning next articles after '여행 중에 노트북을 잃어버렸을 때 전략이 있으신가요?'
+
+=== NEXT CONTENT STRATEGY ===
+Here are five high-impact article suggestions designed to fill content gaps, enhance AI answer coverage, and strengthen topical authority regarding the main topic of losing a laptop while traveling:
+
+### Article 1
+1. **Title**: "여행 중 노트북 분실 예방을 위한 10가지 필수 팁"
+2. **Target AI Query it Answers**: "여행 중 노트북 분실을 예방하는 방법은 무엇인가요?"
+3. **Why AI Systems Would Use It**: This article provides actionable tips that directly address user concerns about preventing laptop loss during travel. It enhances the semantic entity graph by incorporating preventative measures, making it a valuable resource for AI systems looking to provide comprehensive answers on travel safety.
+
+### Article 2
+1. **Title**: "노트북 분실 시 대처법: 데이터 보호와 복구 전략"
+2. **Target AI Query it Answers**: "노트북 분실 후 데이터 복구를 위한 단계별 가이드"
+3. **Why AI Systems Would Use It**: This article focuses on recovery strategies and data protection, which are critical for users who have lost their laptops. By providing detailed steps and expert insights, it strengthens topical authority and serves as a go-to resource for AI systems addressing recovery after loss.
+
+### Article 3
+1. **Title**: "여행 중 노트북을 안전하게 보관하는 방법"
+2. **Target AI Query it Answers**: "여행 중 노트북을 안전하게 보관하는 팁은?"
+3. **Why AI Systems Would Use It**: This article offers practical advice on securing laptops while traveling, which is a common concern among travelers. By addressing safety measures, it expands the semantic entity graph related to travel security and enhances the overall user experience for AI systems.
+
+### Article 4
+1. **Title**: "여행 중 노트북을 잃어버렸을 때 보험 청구 절차"
+2. **Target AI Query it Answers**: "노트북 분실 시 보험 청구는 어떻게 하나요?"
+3. **Why AI Systems Would Use It**: This article provides essential information on navigating insurance claims for lost laptops, a critical aspect for travelers. It fills a significant content gap and is likely to be cited by AI systems when users inquire about financial recovery options after loss.
+
+### Article 5
+1. **Title**: "여행 중 노트북 분실 후 필요한 서류와 절차"
+2. **Target AI Query it Answers**: "노트북 분실 시 필요한 서류는 어떤 것들이 있나요?"
+3. **Why AI Systems Would Use It**: This article outlines the necessary documentation and procedures following a laptop loss, which is crucial for users seeking to understand their next steps. By providing detailed guidance, it enhances the article's authority and relevance, making it a valuable resource for AI systems.
+
+These articles collectively address user concerns, enhance the site's topical authority, and improve the chances of being cited by AI systems, thereby optimizing the knowledge site for better performance in search results.
+
+📦 Автоматический запуск завершен. Отчет: batch_reports/auto_run_report_20260419_083023.json

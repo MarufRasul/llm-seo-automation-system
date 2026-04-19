@@ -9,10 +9,12 @@ class SEOAgent:
         )
 
     def _ask(self, prompt: str):
+        print(f"🔧 SEOAgent: sending prompt to SEO model")
         return self.llm.invoke(prompt).content
 
     # 🔹 SEO анализ темы
     def analyze_topic(self, topic: str):
+        print(f"🔍 SEOAgent: analyzing topic '{topic}'")
         prompt = f"""
 You are an advanced SEO strategist.
 
@@ -31,6 +33,7 @@ Provide:
 
     # 🔹 Поисковые вопросы
     def generate_search_queries(self, topic: str):
+        print(f"🔎 SEOAgent: generating search queries for '{topic}'")
         prompt = f"""
 Generate 10 search questions and 5 long-tail search queries for: "{topic}"
 """
@@ -38,6 +41,7 @@ Generate 10 search questions and 5 long-tail search queries for: "{topic}"
 
     # 🔹 FAQ блок
     def generate_faq(self, topic: str):
+        print(f"❓ SEOAgent: generating FAQ section for '{topic}'")
         prompt = f"""
 Create an SEO-friendly FAQ section (5 Q&A) for: "{topic}"
 """
@@ -45,6 +49,7 @@ Create an SEO-friendly FAQ section (5 Q&A) for: "{topic}"
 
     # 🔹 SEO оптимизация статьи
     def optimize_article(self, article: str, seo_data: dict):
+        print(f"🛠️ SEOAgent: optimizing article using SEO data")
         prompt = f"""
 You are an SEO editor.
 

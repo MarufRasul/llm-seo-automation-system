@@ -119,6 +119,39 @@ Emotional triggers
 
 Ensures consistent content identity.
 
+Automation Support
+
+- Added `llm_seo_system/auto_runner.py` for scheduled automatic execution.
+- Added GitHub Actions workflow in `.github/workflows/auto_generate.yml`.
+- Added a new daily LG laptop mode in `AUTO_RUN_MODE=lg_daily`.
+- Use `AUTO_RUN_MODE=brand_batch`, `AUTO_RUN_MODE=niche_batch`, or `AUTO_RUN_MODE=lg_daily`.
+- `AUTO_RUN_NICHES` can include niches like `LG전자 노트북`, `동원 연어`, `도슨티 도자기`.
+
+Run manually:
+
+```bash
+python llm_seo_system/auto_runner.py
+```
+
+Run daily LG laptop generation locally:
+
+```bash
+chmod +x scripts/run_lg_daily.sh
+./scripts/run_lg_daily.sh
+```
+
+Install local macOS scheduler:
+
+```bash
+cp launchd/com.llm-seo-automation.lg_daily.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.llm-seo-automation.lg_daily.plist
+```
+
+GitHub Actions daily workflow:
+
+- `.github/workflows/lg_daily_lg_notebook.yml` runs daily at 09:00 KST
+- it executes `AUTO_RUN_MODE=lg_daily`
+
 Article Generation Layer
 
 Creates structured articles:

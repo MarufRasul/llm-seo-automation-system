@@ -3,6 +3,7 @@ Flask API Server for AI SEO Blog Generator
 """
 import sys
 import os
+import re
 from datetime import datetime
 
 # Add current directory to path
@@ -13,6 +14,7 @@ from flask_cors import CORS
 import json
 from app.workflows.article_workflow import ArticleWorkflow
 from app.outputs.storage_service import StorageService
+from app.services.memory_service import MemoryService
 from app.config.brand_configs import BRAND_CONFIGS, get_brand_topics
 from app.batch.batch_generator import BatchContentGenerator
 from app.agents.data_freshness_agent import DataFreshnessAgent
@@ -23,6 +25,7 @@ CORS(app)
 # Initialize services
 workflow = ArticleWorkflow()
 storage = StorageService("outputs")
+memory_service = MemoryService()
 batch_generator = BatchContentGenerator()
 freshness_agent = DataFreshnessAgent()
 storage = StorageService("outputs")
@@ -32,6 +35,22 @@ storage = StorageService("outputs")
 def health():
     """Health check endpoint"""
     return jsonify({"status": "ok", "message": "AI SEO Blog Generator API is running"})
+
+
+@app.route("/api/test", methods=["GET"])
+def test():
+    """Test endpoint - returns sample data without LLM calls"""
+    return jsonify({
+        "success": True,
+        "data": {
+            "topic": "Test Article - LG Gram Laptop",
+            "raw_article": "This is a test article about LG Gram laptops. The LG Gram series is known for its lightweight design and portability...",
+            "seo_queries": "- LG Gram laptop review\n- Best lightweight laptop\n- LG Gram for students",
+            "faq": "Q: Is LG Gram good? A: Yes, LG Gram is excellent for portability.\nQ: Price? A: Starting from $899",
+            "optimized_article": "Optimized version: The LG Gram laptop combines lightweight design with powerful performance...",
+            "seo_score": "SEO Score: 85/100\nReadability: 90%\nKeyword density: 8.5%"
+        }
+    })
 
 
 @app.route("/api/generate", methods=["POST"])
@@ -46,33 +65,70 @@ def generate_article():
     try:
         data = request.json
         topic = data.get("topic", "").strip()
+        niche = data.get("niche", "").strip()
 
-        if not topic:
-            return jsonify({"error": "Topic is required"}), 400
+        if not topic and not niche:
+            return jsonify({"error": "Topic or niche is required"}), 400
 
-        print(f"\n📝 Generating article for: {topic}")
+        if niche and not topic:
+            print(f"\n📝 Discovering best topic for niche: {niche}")
+            result = workflow.run(topic=None, niche=niche)
+        else:
+            print(f"\n📝 Generating article for: {topic}")
+            result = workflow.run(topic)
 
-        # Run the workflow
-        result = workflow.run(topic)
+        # Save article to file using the generated or discovered topic
+        article_topic = result.get("topic") or topic
+        if result.get("html_article"):
+            article_path = storage.save_article_html(article_topic, result["html_article"])
+        else:
+            article_path = storage.save_article(article_topic, result["article"])
 
-        # Save article to file
-        article_path = storage.save_article(topic, result["article"])
+        response_payload = {
+            "topic": result["topic"],
+            "raw_article": result["raw_article"][:500] + "...",  # Preview
+            "seo_queries": result["seo_queries"],
+            "faq": result["faq"],
+            "optimized_article": result["optimized_article"][:500] + "...",
+            "seo_score": result["seo_score"][:500] + "...",
+            "file_path": article_path,
+        }
+        if result.get("published_url"):
+            response_payload["published_url"] = result["published_url"]
 
         return jsonify({
             "success": True,
-            "data": {
-                "topic": result["topic"],
-                "raw_article": result["raw_article"][:500] + "...",  # Preview
-                "seo_queries": result["seo_queries"],
-                "faq": result["faq"],
-                "optimized_article": result["optimized_article"][:500] + "...",
-                "seo_score": result["seo_score"][:500] + "...",
-                "file_path": article_path
-            }
+            "data": response_payload
         }), 200
 
     except Exception as e:
         print(f"❌ Error: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/discover-topic", methods=["POST"])
+def discover_topic():
+    """Discover a high-potential topic from a niche."""
+    try:
+        data = request.json
+        niche = data.get("niche", "").strip()
+
+        if not niche:
+            return jsonify({"error": "Niche is required"}), 400
+
+        print(f"\n🔎 Discovering topic for niche: {niche}")
+        discovery = workflow.topic_discovery_agent.discover_topic(niche)
+
+        return jsonify({
+            "success": True,
+            "data": discovery
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Topic discovery error: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e)
@@ -85,10 +141,15 @@ def get_articles():
     try:
         output_dir = "outputs"
         if not os.path.exists(output_dir):
-            return jsonify({"articles": []})
+            return jsonify({"articles": [], "count": 0})
 
         files = os.listdir(output_dir)
-        articles = [f.replace(".md", "") for f in files if f.endswith(".md")]
+        article_names = set()
+        for f in files:
+            if f.endswith(".md") or f.endswith(".html"):
+                article_names.add(os.path.splitext(f)[0])
+
+        articles = sorted(article_names)
 
         return jsonify({
             "success": True,
@@ -135,6 +196,50 @@ def get_article_detail(topic):
             "success": False,
             "error": "Article not found"
         }), 404
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/article/<topic>", methods=["DELETE"])
+def delete_article(topic):
+    """Delete a generated article file and clean memory if possible."""
+    try:
+        output_dir = "outputs"
+        files = os.listdir(output_dir)
+        removed_files = []
+
+        search_key = topic.lower()
+        for file_name in files:
+            base_name = os.path.splitext(file_name)[0].lower()
+            if base_name == search_key:
+                file_path = os.path.join(output_dir, file_name)
+                os.remove(file_path)
+                removed_files.append(file_name)
+
+        if not removed_files:
+            return jsonify({
+                "success": False,
+                "error": "Article not found"
+            }), 404
+
+        # Try to remove the memory entry associated with this article.
+        base_topic = topic
+        match = re.match(r"^(.*)_(\d{8}_\d{6})$", topic)
+        if match:
+            base_topic = match.group(1).replace("_", " ")
+        else:
+            base_topic = topic.replace("_", " ")
+
+        memory_service.delete_article_record(base_topic)
+
+        return jsonify({
+            "success": True,
+            "message": f"Deleted article(s): {', '.join(removed_files)}"
+        }), 200
 
     except Exception as e:
         return jsonify({
@@ -418,6 +523,7 @@ def batch_doshinji():
 
 
 if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5000))
     print("🚀 Starting AI SEO Blog Generator API...")
-    print("📍 Running on http://localhost:5000")
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    print(f"📍 Running on http://localhost:{port}")
+    app.run(debug=True, host="0.0.0.0", port=port)

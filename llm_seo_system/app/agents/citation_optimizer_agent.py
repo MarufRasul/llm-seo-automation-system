@@ -8,6 +8,7 @@ class CitationOptimizerAgent:
         """
         Analyzes how well the article is optimized for LLM citation behavior
         """
+        print("📑 CitationOptimizerAgent: analyzing article citation optimization")
 
         score = 0
         report = {}

@@ -28,3 +28,10 @@ class MemoryService:
 
     def get_metadata(self, topic: str) -> dict:
         return self.data.get(topic, {})
+
+    def delete_article_record(self, topic: str):
+        if topic in self.data:
+            del self.data[topic]
+            with open(self.topics_file, "w", encoding="utf-8") as f:
+                json.dump(self.data, f, indent=2, ensure_ascii=False)
+            print(f"[MemoryService] deleted topic: {topic}")

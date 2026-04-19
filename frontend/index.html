@@ -279,25 +279,101 @@
 
       .articles-list {
         display: grid;
-        gap: 10px;
+        gap: 16px;
       }
 
-      .article-link {
+      .article-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+
+      .article-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 38px rgba(0, 0, 0, 0.12);
+      }
+
+      .article-card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 8px;
+        gap: 12px;
+        padding: 18px 20px;
+        background: #ffffff;
         cursor: pointer;
-        transition: all 0.3s;
-        text-decoration: none;
-        color: #333;
       }
 
-      .article-link:hover {
-        background: #e9ecef;
-        transform: translateX(5px);
+      .article-card-header h3 {
+        margin: 0;
+        font-size: 1.05em;
+        color: #1f2937;
+        flex: 1;
+      }
+
+      .article-card-header button {
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-size: 0.95em;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .article-card-header button:hover {
+        background: #5563c3;
+      }
+
+      .article-card-content {
+        display: none;
+        padding: 20px;
+        background: #ffffff;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .article-card-content.open {
+        display: block;
+      }
+
+      .article-card-content p,
+      .article-card-content pre {
+        margin: 0;
+        color: #374151;
+        line-height: 1.7;
+      }
+
+      .article-card-content pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #f3f4f6;
+        padding: 16px;
+        border-radius: 10px;
+        margin-top: 10px;
+      }
+
+      .article-card-meta {
+        color: #6b7280;
+        font-size: 0.95em;
+      }
+
+      .delete-btn {
+        background: #ff5a5f;
+        color: white;
+        border: none;
+        border-radius: 999px;
+        padding: 10px 16px;
+        cursor: pointer;
+        font-size: 0.95em;
+        transition: background 0.2s;
+      }
+
+      .delete-btn:hover {
+        background: #e03b3f;
       }
 
       code {
@@ -339,6 +415,17 @@
 
           <div class="error" id="error"></div>
           <div class="success" id="success"></div>
+          <div
+            class="form-group"
+            id="publishedUrlContainer"
+            style="display: none; margin-bottom: 20px"
+          >
+            <label>Published Article URL</label>
+            <p
+              id="publishedUrl"
+              style="word-break: break-all; color: #2d6cdf"
+            ></p>
+          </div>
 
           <div class="form-group">
             <label for="topic">Topic to Research & Generate</label>
@@ -347,6 +434,15 @@
               id="topic"
               placeholder="e.g., LG Gram laptop for students"
               value="LG Gram laptop for students"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="niche">Optional Niche (for topic discovery)</label>
+            <input
+              type="text"
+              id="niche"
+              placeholder="e.g., LG전자 노트북, 동원 연어, 도슨티 도자기"
             />
           </div>
 
@@ -461,9 +557,10 @@
 
       async function generateArticle() {
         const topic = document.getElementById('topic').value.trim();
+        const niche = document.getElementById('niche').value.trim();
 
-        if (!topic) {
-          showError('Please enter a topic');
+        if (!topic && !niche) {
+          showError('Please enter a topic or niche');
           return;
         }
 
@@ -479,7 +576,10 @@
           const response = await fetch(`${API_BASE}/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ topic }),
+            body: JSON.stringify({
+              topic,
+              niche: document.getElementById('niche').value.trim(),
+            }),
           });
 
           const data = await response.json();
@@ -495,9 +595,20 @@
             document.getElementById('resultScore').textContent =
               data.data.seo_score;
 
-            showSuccess(
-              `✅ Article generated successfully! Saved to: ${data.data.file_path}`,
-            );
+            let message = `✅ Article generated successfully! Saved to: ${data.data.file_path}`;
+            if (data.data.published_url) {
+              message += `\nPublic URL available below.`;
+              document.getElementById('publishedUrlContainer').style.display =
+                'block';
+              document.getElementById('publishedUrl').innerHTML =
+                `<a href="${data.data.published_url}" target="_blank">${data.data.published_url}</a>`;
+            } else {
+              document.getElementById('publishedUrlContainer').style.display =
+                'none';
+              document.getElementById('publishedUrl').textContent = '';
+            }
+
+            showSuccess(message);
             loadStats();
           } else {
             showError(`❌ Error: ${data.error}`);
@@ -542,12 +653,21 @@
           if (articlesData.articles && articlesData.articles.length > 0) {
             articlesList.innerHTML = articlesData.articles
               .map(
-                (article) => `
-                        <div class="article-link" onclick="loadArticle('${article}')">
-                            <span>📄 ${article}</span>
-                            <span>→</span>
-                        </div>
-                    `,
+                (article, index) => `
+                  <div class="article-card" id="article-card-${index}">
+                    <div class="article-card-header" onclick="toggleArticleDetails('${article}', ${index})">
+                      <h3>📄 ${article}</h3>
+                      <div>
+                        <button type="button">View</button>
+                        <button class="delete-btn" onclick="deleteArticle('${article}'); event.stopPropagation();">Delete</button>
+                      </div>
+                    </div>
+                    <div class="article-card-content" id="article-content-${index}">
+                      <p class="article-card-meta">Click the header to view the article contents.</p>
+                      <pre id="article-text-${index}">Loading...</pre>
+                    </div>
+                  </div>
+                `,
               )
               .join('');
           } else {
@@ -577,11 +697,65 @@
 
       function hideSuccess() {
         document.getElementById('success').classList.remove('show');
+        document.getElementById('publishedUrlContainer').style.display = 'none';
+        document.getElementById('publishedUrl').textContent = '';
       }
 
-      function loadArticle(topic) {
-        document.getElementById('topic').value = topic;
-        window.scrollTo(0, 0);
+      async function toggleArticleDetails(topic, index) {
+        const contentContainer = document.getElementById(
+          `article-content-${index}`,
+        );
+        const textElement = document.getElementById(`article-text-${index}`);
+        const isOpen = contentContainer.classList.contains('open');
+
+        if (isOpen) {
+          contentContainer.classList.remove('open');
+          return;
+        }
+
+        contentContainer.classList.add('open');
+        textElement.textContent = 'Loading article details...';
+
+        try {
+          const response = await fetch(
+            `${API_BASE}/article/${encodeURIComponent(topic)}`,
+          );
+          const data = await response.json();
+
+          if (data.success) {
+            textElement.textContent = data.content;
+          } else {
+            textElement.textContent = `Error loading article: ${data.error}`;
+          }
+        } catch (error) {
+          textElement.textContent = `Network error: ${error.message}`;
+        }
+      }
+
+      async function deleteArticle(topic) {
+        if (!confirm(`Delete article "${topic}"? This cannot be undone.`)) {
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_BASE}/article/${encodeURIComponent(topic)}`,
+            {
+              method: 'DELETE',
+            },
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            showSuccess(data.message || 'Article deleted successfully.');
+            loadStats();
+          } else {
+            showError(`❌ Delete failed: ${data.error}`);
+          }
+        } catch (error) {
+          showError(`Network error: ${error.message}`);
+        }
       }
 
       // Load stats on page load

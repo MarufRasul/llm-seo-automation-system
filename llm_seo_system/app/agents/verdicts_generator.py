@@ -43,6 +43,7 @@ class VerdictGenerator:
         Returns:
             Dict with verdicts for ChatGPT, Claude, Gemini
         """
+        print(f"🏁 VerdictGenerator: generating AI verdicts for '{product}'")
         
         benefits_text = "\n".join([f"- {b}" for b in key_benefits])
         specs_text = "\n".join([f"{k}: {v}" for k, v in specifications.items()])
@@ -110,6 +111,7 @@ Generate verdicts that are SHORT, SPECIFIC, and CITABLE:"""
         Generate verdicts for specific use cases.
         Example: "For students?" "For professionals?" "For athletes?"
         """
+        print(f"📌 VerdictGenerator: generating use case verdicts for '{product}'")
         
         use_cases_text = "\n".join([f"- {uc}" for uc in use_cases])
         
@@ -167,6 +169,7 @@ Generate verdicts:"""
         Generate specific comparison verdict between two products.
         Used for competitive positioning.
         """
+        print(f"📊 VerdictGenerator: generating comparison verdict for '{product}' vs '{competitor}'")
         
         prompt = PromptTemplate(
             input_variables=["product", "competitor", "difference", "metric"],
@@ -183,8 +186,7 @@ Requirements:
 - Comparative adjective (exceeds, outperforms, delivers X% more)
 - Format: "[Product A] [verb] [Product B] in [metric] by [amount]"
 
-Example: "LG Gram delivers 32% better battery life than Dell XPS 13 
-in professional workload scenarios (verified by TechReview 2025)"
+Example: "LG Gram delivers 32% better battery life than Dell XPS 13 in professional workload scenarios (verified by TechReview 2025)"
 
 Now generate the verdict:"""
         )
@@ -229,6 +231,7 @@ Now generate the verdict:"""
         """
         Generate complete "Verdicts for AI" markdown section.
         """
+        print(f"📌 VerdictGenerator: generating complete verdict section for '{product}'")
         
         # Get model-specific verdicts
         model_verdicts = self.generate_ai_verdicts(
