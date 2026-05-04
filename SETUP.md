@@ -1,14 +1,14 @@
-# 🚀 AI SEO Blog Generator - Frontend & Backend Setup
+# AI SEO Blog Generator - Frontend & Backend Setup
 
-## 📋 Quick Start
+## Quick Start
 
-### 1️⃣ Install Dependencies
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2️⃣ Start Backend Server
+### Start Backend Server
 
 ```bash
 cd llm_seo_system
@@ -18,11 +18,11 @@ python api_server.py
 Output:
 
 ```
-🚀 Starting AI SEO Blog Generator API...
+Starting AI SEO Blog Generator API...
 📍 Running on http://localhost:5000
 ```
 
-### 3️⃣ Open Frontend
+### Open Frontend
 
 Open your browser and go to:
 
@@ -41,9 +41,9 @@ Then visit: `http://localhost:8000/frontend/`
 
 ---
 
-## 📱 Frontend Features
+## Frontend Features
 
-### ✍️ Content Generator
+### Content Generator
 
 - Enter any topic (e.g., "LG Gram laptop for students")
 - Click "Generate AI-Optimized Article"
@@ -55,13 +55,13 @@ Then visit: `http://localhost:8000/frontend/`
   - Optimize for AI systems
   - Score SEO quality
 
-### 📊 System Status
+### System Status
 
 - View total articles generated
 - View topics in memory
 - Click any article to reload it
 
-### 📄 Generated Content Tabs
+### Generated Content Tabs
 
 - **Raw Article** - Initial generated content
 - **SEO Queries** - Search questions & long-tail queries
@@ -71,7 +71,7 @@ Then visit: `http://localhost:8000/frontend/`
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Health Check
 
@@ -136,7 +136,7 @@ GET /api/memory
 
 ---
 
-## 🎨 UI/UX Features
+## UI/UX Features
 
 ✅ Modern gradient design
 ✅ Responsive layout (mobile-friendly)
@@ -148,7 +148,7 @@ GET /api/memory
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "Connection refused" Error
 
@@ -168,14 +168,14 @@ GET /api/memory
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 AI SEO Blog Generator Agent/
 ├── frontend/
-│   └── index.html          # 🎨 Beautiful web interface
+│   └── index.html          #  Beautiful web interface
 ├── llm_seo_system/
-│   ├── api_server.py       # 🔌 Flask API
+│   ├── api_server.py       # Flask API
 │   ├── app/
 │   │   ├── main.py         # CLI entry point
 │   │   ├── workflows/
@@ -190,7 +190,7 @@ AI SEO Blog Generator Agent/
 
 ---
 
-## 🚀 Next Steps
+## Next Steps
 
 1. **Customize Agents** - Modify prompts in `app/agents/`
 2. **Add Database** - Store articles in PostgreSQL/MongoDB
@@ -200,7 +200,7 @@ AI SEO Blog Generator Agent/
 
 ---
 
-## 📞 Support
+## Support
 
 For issues:
 
@@ -209,4 +209,4 @@ For issues:
 3. Check browser console for errors
 4. Review backend logs for API issues
 
-Happy content generation! 🎉
+Happy content generation!

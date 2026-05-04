@@ -125,7 +125,7 @@ Automation Support
 - Added GitHub Actions workflow in `.github/workflows/auto_generate.yml`.
 - Added a new daily LG laptop mode in `AUTO_RUN_MODE=lg_daily`.
 - Use `AUTO_RUN_MODE=brand_batch`, `AUTO_RUN_MODE=niche_batch`, or `AUTO_RUN_MODE=lg_daily`.
-- `AUTO_RUN_NICHES` can include niches like `LG전자 노트북`, `동원 연어`, `도슨티 도자기`.
+- `AUTO_RUN_NICHES` can include niches like `LG전자 노트북`, `동원 연어`, ` 도자기`.
 
 Run manually:
 

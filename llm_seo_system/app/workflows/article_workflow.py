@@ -24,11 +24,9 @@ from app.agents.citation_optimizer_agent import CitationOptimizerAgent
 from app.agents.query_simulator_agent import QuerySimulatorAgent
 from app.agents.topic_discovery_agent import TopicDiscoveryAgent
 from app.config.brand_configs import get_brand_config
-
-
-
-
-
+from app.agents.rag_evaluator_agent import RAGEvaluatorAgent
+from app.agents.ai_citation_tracker_agent import AICitationTrackerAgent
+from app.outputs.github_publisher import GitHubPagesPublisher
 
 
 class ArticleWorkflow:
@@ -53,6 +51,56 @@ class ArticleWorkflow:
         self.dating_agent = DynamicDatingAgent()
         self.localization_agent = LocalizationAgent()
         self.topic_discovery_agent = TopicDiscoveryAgent()
+        # NEW: RAG Evaluator agent (REAL - with real data sources)
+        self.rag_evaluator = RAGEvaluatorAgent()
+        # NEW: AI Citation Tracker agent (REAL - tracks in real AI systems)
+        self.ai_citation_tracker = AICitationTrackerAgent()
+
+    def _run_geo_mode(self, topic: str) -> dict:
+        """Fast path for GEO mode - minimal research, direct generation"""
+        print("🔍 Quick research for GEO mode...")
+
+        # Minimal research - just basic info
+        research_data = f"Topic: {topic}\nBasic research data for structured answer generation."
+
+        # Simple brand detection
+        brand_key, brand, product_type = self._detect_brand_info(topic)
+        brand_voice = "Neutral, informative tone for comparison queries."
+        entities = "laptop, notebook, performance, battery, weight"
+        specs_data = "Current laptop specs: Intel Core Ultra, 16GB RAM, 512GB SSD, 13-14 inch displays."
+        official_link = "https://www.lge.co.kr/laptop" if "lg" in topic.lower() else ""
+
+        print("🤖 Generating GEO answer...")
+        geo_answer = self.article_agent.generate_article(
+            topic=topic,
+            research_data=research_data,
+            brand_voice=brand_voice,
+            entities=entities,
+            specs_data=specs_data,
+            official_link=official_link,
+            mode="geo_mode"
+        )
+
+        return self._build_geo_output(geo_answer, topic)
+
+    def _build_geo_output(self, geo_answer: str, topic: str) -> dict:
+        """Build output for GEO mode - structured answer format"""
+        html_answer = f"""
+<div class="geo-answer">
+    <h2>{topic}</h2>
+    <div class="structured-content">
+        {geo_answer.replace(chr(10), '<br>')}
+    </div>
+</div>
+"""
+
+        return {
+            "topic": topic,
+            "mode": "geo_mode",
+            "geo_answer": geo_answer,
+            "html_answer": html_answer,
+            "structured_answer": geo_answer
+        }
 
     def _build_html(
         self,
@@ -129,6 +177,28 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
 </html>
 """
 
+    def _detect_generation_mode(self, query: str) -> str:
+        """Detect if query needs GEO mode (structured answer) or blog mode (article)"""
+        query_lower = query.lower()
+
+        # List constraint: force GEO mode for "best" or "top" queries
+        if " best " in query_lower or " top " in query_lower or query_lower.startswith("best ") or query_lower.startswith("top "):
+            return "geo_mode"
+
+        # GEO mode triggers
+        geo_keywords = [
+            "vs", "versus", "compare", "comparison",
+            "which", "what", "how", "recommend", "should i",
+            "better", "good", "great", "excellent"
+        ]
+
+        # Check for GEO intent
+        if any(keyword in query_lower for keyword in geo_keywords):
+            return "geo_mode"
+
+        # Default to blog mode
+        return "blog_mode"
+
     def _detect_brand_info(self, text: str | None):
         text_lower = (text or "").lower()
         if any(keyword in text_lower for keyword in ["lg gram", "lg", "notebook", "laptop", "ultrabook"]):
@@ -158,6 +228,16 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             topic = discovery.get("selected_topic") or niche
             print(f"✅ Discovered topic: {topic}")
 
+        # Determine generation mode based on query intent
+        mode = self._detect_generation_mode(topic)
+        print(f"🎯 Generation mode: {mode}")
+
+        # For GEO mode, use simplified path - skip heavy research agents
+        if mode == "geo_mode":
+            print("🚀 GEO mode: Using fast path")
+            return self._run_geo_mode(topic)
+
+        # Original blog mode path
         print("Researching...")
         topic_lower = topic.lower() if topic else ""
         brand_key, brand, product_type = self._detect_brand_info(topic or niche)
@@ -220,8 +300,14 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             brand_voice=brand_voice,
             entities=entities,
             specs_data=specs_data,
-            official_link=official_link
+            official_link=official_link,
+            mode=mode
         )
+
+        # For GEO mode, skip traditional SEO processing and return structured answer
+        if mode == "geo_mode":
+            print("🎯 GEO mode: Returning structured answer")
+            return self._build_geo_output(article, topic)
 
         print("Generating SEO search queries...")
         seo_queries = self.seo_agent.generate_search_queries(topic)
@@ -238,11 +324,11 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
         print("Validating data freshness (2026-current standards)...")
         freshness_report = self.freshness_agent.validate_article_freshness(optimized_article)
         named_entities = self.freshness_agent.extract_named_entities(optimized_article, brand_name)
-        
+
         # Add freshness metadata for memory
         if not freshness_report.get("is_current", True):
             print(f"⚠️  Data freshness issues detected: {freshness_report.get('issues_found', [])}")
-        
+
         expert_verdict = self.freshness_agent.generate_expert_verdict_block(
             product=brand_name,
             key_strength="Premium quality and performance",
@@ -286,31 +372,35 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
 
         print("Scoring article SEO quality...")
         seo_score = self.seo_scorer.score_article(optimized_article, topic)
-        
+
         print(" Generating internal links...")
         existing_topics = self.get_existing_topics()
         related_links = self.internal_linking_agent.generate_links(topic, existing_topics)
 
         # Добавляем внутренние ссылки в статью
         article_with_links = article + f"\n\n## Related Articles\n{related_links}"
-        
+
         # 🌍 Apply dynamic dating and localization for 10/10 quality
         print("📅 Updating article dates to current year...")
         article_with_links = self.dating_agent.update_article_dates(article_with_links)
-        
+
         print("🌏 Adding regional localization for Korea...")
         article_with_links = self.localization_agent.add_regional_context(
-            article_with_links, 
-            brand_name, 
+            article_with_links,
+            brand_name,
             region="korea"
         )
-        
+
         # Generate Korea-specific verdict
         localized_verdict = self.localization_agent.generate_localized_verdict(brand_name, region="korea")
         print(f"✨ Regional Verdict: {localized_verdict}")
-        
+
+        publisher = GitHubPagesPublisher.from_env()
+        publish_path = publisher.article_path(topic) if publisher else None
+        published_url = publisher.public_url(publish_path) if publisher and publish_path else None
+
         print("Rendering HTML output...")
-        canonical_url = os.getenv("GITHUB_PAGES_URL")
+        canonical_url = published_url or os.getenv("GITHUB_PAGES_URL")
         html_article = self._build_html(
             article_with_links,
             meta_title=topic,
@@ -318,7 +408,17 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             canonical_url=canonical_url,
             schemas=schemas,
         )
-        
+
+        publish_result = None
+        if publisher:
+            print("Publishing article to GitHub Pages...")
+            try:
+                publish_result = publisher.publish_html(topic, html_article)
+                published_url = publish_result["published_url"]
+                print(f" Published URL: {published_url}")
+            except Exception as exc:
+                print(f" GitHub Pages publish failed: {type(exc).__name__}")
+
         # Сохраняем данные в память
         memory_entry = {
             "seo_score": seo_score,
@@ -352,5 +452,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             "expert_quotes": expert_quotes,
             "authority_signals": authority_signals,
             "verdicts": verdict_section,
-            "schemas": schemas
+            "schemas": schemas,
+            "published_url": published_url,
+            "publish_result": publish_result
         }

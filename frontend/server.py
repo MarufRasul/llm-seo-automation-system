@@ -1,7 +1,7 @@
 """
 Simple HTTP Server for Frontend
 Run: python server.py
-Then open: http://localhost:8000
+Then open: http://localhost:3000
 """
 import http.server
 import socketserver
@@ -9,7 +9,7 @@ import os
 import webbrowser
 from time import sleep
 
-PORT = 8000
+PORT = 3000
 HANDLER = http.server.SimpleHTTPRequestHandler
 
 # Change to frontend directory

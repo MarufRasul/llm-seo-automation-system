@@ -1,5 +1,6 @@
 langchain
 langchain-openai
+langchain-community
 python-dotenv
 openai
 flask
@@ -7,3 +8,5 @@ flask-cors
 beautifulsoup4
 requests
 markdown
+aiohttp
+faiss-cpu

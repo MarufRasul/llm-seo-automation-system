@@ -399,19 +399,77 @@
         opacity: 0.8;
         margin-top: 40px;
       }
+
+      /* Dashboard styles */
+      .tab-btn {
+        background: none;
+        border: none;
+        padding: 12px 16px;
+        cursor: pointer;
+        color: #666;
+        font-weight: 600;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+        font-size: 0.95em;
+      }
+
+      .tab-btn:hover {
+        color: #667eea;
+      }
+
+      .tab-btn.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+      }
+
+      .tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #eee;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <header>
-        <h1>🚀 AI SEO Blog Generator</h1>
+        <h1>AI SEO Blog Generator</h1>
         <p>GEO Content Engine - Optimized for AI Visibility</p>
       </header>
 
       <div class="main-content">
         <!-- Generator Section -->
         <div class="card">
-          <h2><span class="icon">✍️</span> Content Generator</h2>
+          <h2><span class="icon"></span> Content Generator</h2>
 
           <div class="error" id="error"></div>
           <div class="success" id="success"></div>
@@ -442,12 +500,12 @@
             <input
               type="text"
               id="niche"
-              placeholder="e.g., LG전자 노트북, 동원 연어, 도슨티 도자기"
+              placeholder="e.g., LG전자 노트북, 동원 연어, "
             />
           </div>
 
           <button id="generateBtn" onclick="generateArticle()">
-            🔥 Generate AI-Optimized Article
+            Generate AI-Optimized Article
           </button>
 
           <div class="loading" id="loading">
@@ -456,33 +514,114 @@
           </div>
         </div>
 
-        <!-- Stats Section -->
+        <!-- Metrics Dashboard -->
         <div class="card">
-          <h2><span class="icon">📊</span> System Status</h2>
-
-          <div class="stats" id="stats">
+          <h2><span class="icon"></span> AI Visibility Metrics</h2>
+          <div class="stats" id="metricsStats">
             <div class="stat-box">
-              <div class="number" id="totalArticles">0</div>
-              <div class="label">Articles Generated</div>
+              <div class="number" id="citationRate">0%</div>
+              <div class="label">Citation Rate</div>
             </div>
             <div class="stat-box">
-              <div class="number" id="totalTopics">0</div>
-              <div class="label">Topics in Memory</div>
+              <div class="number" id="totalCitations">0</div>
+              <div class="label">Total Citations</div>
+            </div>
+            <div class="stat-box">
+              <div class="number" id="topLLM">-</div>
+              <div class="label">Top Performing LLM</div>
+            </div>
+            <div class="stat-box">
+              <div class="number" id="contentGaps">8</div>
+              <div class="label">Content Gaps Found</div>
             </div>
           </div>
+          <button
+            onclick="refreshMetricsDashboard()"
+            style="margin-top: 15px; width: 100%; padding: 10px"
+          >
+            Refresh Metrics
+          </button>
+        </div>
+      </div>
 
-          <h3 style="margin-top: 20px; margin-bottom: 10px">
-            📚 Generated Articles
-          </h3>
+      <!-- Dashboard Tabs -->
+      <div class="card">
+        <h2><span class="icon"></span> Real-Time Tracking</h2>
+
+        <div class="tabs" id="dashboardTabs">
+          <button
+            class="tab-btn active"
+            onclick="switchDashboardTab('articles')"
+          >
+            Articles
+          </button>
+          <button class="tab-btn" onclick="switchDashboardTab('citations')">
+            AI Citations
+          </button>
+          <button class="tab-btn" onclick="switchDashboardTab('competitors')">
+            Competitors
+          </button>
+          <button class="tab-btn" onclick="switchDashboardTab('metrics')">
+            Full Dashboard
+          </button>
+        </div>
+
+        <!-- Articles Tab -->
+        <div class="tab-content active" id="dashboard-articles">
+          <h3 style="margin-bottom: 15px">Generated Articles</h3>
           <div class="articles-list" id="articlesList">
             <p style="color: #999">Loading articles...</p>
           </div>
         </div>
+
+        <!-- Citations Tab -->
+        <div class="tab-content" id="dashboard-citations">
+          <h3 style="margin-bottom: 15px">AI Citation Tracking</h3>
+          <div id="citationsContent">
+            <p style="color: #999">Loading citations...</p>
+          </div>
+        </div>
+
+        <!-- Competitors Tab -->
+        <div class="tab-content" id="dashboard-competitors">
+          <h3 style="margin-bottom: 15px">Competitor Intelligence</h3>
+          <div class="form-group" style="margin-bottom: 15px">
+            <input
+              type="text"
+              id="competitorBrand"
+              placeholder="Brand name"
+              value="LG"
+              style="margin-bottom: 10px"
+            />
+            <input
+              type="text"
+              id="competitorList"
+              placeholder="Competitors (comma-separated)"
+              value="Dell,MacBook,Asus"
+            />
+            <button
+              onclick="loadCompetitorIntel()"
+              style="width: 100%; margin-top: 10px"
+            >
+              Analyze Competitors
+            </button>
+          </div>
+          <div id="competitorsContent">
+            <p style="color: #999">Enter brand and competitors to analyze...</p>
+          </div>
+        </div>
+
+        <!-- Metrics Dashboard Tab -->
+        <div class="tab-content" id="dashboard-metrics">
+          <h3 style="margin-bottom: 15px">Comprehensive Metrics</h3>
+          <div id="metricsContent">
+            <p style="color: #999">Loading full dashboard...</p>
+          </div>
+        </div>
       </div>
 
-      <!-- Results Section -->
       <div class="card">
-        <h2><span class="icon">📄</span> Generated Content</h2>
+        <h2><span class="icon"></span> Generated Content</h2>
 
         <div class="tabs" id="tabs">
           <button class="tab-btn active" onclick="switchTab('raw')">
@@ -547,14 +686,50 @@
       </div>
 
       <div class="footer">
-        <p>🤖 Powered by AI LLM SEO Automation System</p>
+        <p>Powered by AI LLM SEO Automation System</p>
         <p>Optimizing content for LLM visibility (GEO)</p>
       </div>
     </div>
 
     <script>
       const API_BASE = 'http://localhost:5000/api';
+      let metricsRefreshInterval;
 
+      // ============ TAB SWITCHING ============
+      function switchTab(tabName) {
+        document.querySelectorAll('#tabs ~ .tab-content').forEach((el) => {
+          el.classList.remove('active');
+        });
+        document.querySelectorAll('#tabs .tab-btn').forEach((el) => {
+          el.classList.remove('active');
+        });
+
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        event.target.classList.add('active');
+      }
+
+      function switchDashboardTab(tabName) {
+        document
+          .querySelectorAll('#dashboardTabs ~ .tab-content')
+          .forEach((el) => {
+            el.classList.remove('active');
+          });
+        document.querySelectorAll('#dashboardTabs .tab-btn').forEach((el) => {
+          el.classList.remove('active');
+        });
+
+        document.getElementById(`dashboard-${tabName}`).classList.add('active');
+        event.target.classList.add('active');
+
+        // Load data when tab is opened
+        if (tabName === 'citations') {
+          loadCitationsData();
+        } else if (tabName === 'metrics') {
+          loadFullMetrics();
+        }
+      }
+
+      // ============ ARTICLE GENERATION ============
       async function generateArticle() {
         const topic = document.getElementById('topic').value.trim();
         const niche = document.getElementById('niche').value.trim();
@@ -595,7 +770,7 @@
             document.getElementById('resultScore').textContent =
               data.data.seo_score;
 
-            let message = `✅ Article generated successfully! Saved to: ${data.data.file_path}`;
+            let message = ` Article generated successfully! Saved to: ${data.data.file_path}`;
             if (data.data.published_url) {
               message += `\nPublic URL available below.`;
               document.getElementById('publishedUrlContainer').style.display =
@@ -610,8 +785,14 @@
 
             showSuccess(message);
             loadStats();
+            refreshMetricsDashboard();
+
+            // Auto-track citation for this article
+            setTimeout(() => {
+              trackNewArticleCitation(topic);
+            }, 1000);
           } else {
-            showError(`❌ Error: ${data.error}`);
+            showError(` Error: ${data.error}`);
           }
         } catch (error) {
           showError(`Network error: ${error.message}`);
@@ -621,20 +802,326 @@
         }
       }
 
-      function switchTab(tabName) {
-        // Hide all tabs
-        document.querySelectorAll('.tab-content').forEach((el) => {
-          el.classList.remove('active');
-        });
-        document.querySelectorAll('.tab-btn').forEach((el) => {
-          el.classList.remove('active');
-        });
+      // ============ METRICS LOADING ============
+      async function refreshMetricsDashboard() {
+        try {
+          const response = await fetch(`${API_BASE}/metrics/dashboard`);
+          const data = await response.json();
 
-        // Show selected tab
-        document.getElementById(`tab-${tabName}`).classList.add('active');
-        event.target.classList.add('active');
+          if (data.success) {
+            const ai = data.data.ai_visibility;
+            document.getElementById('citationRate').textContent =
+              ai.citation_rate;
+            document.getElementById('totalCitations').textContent =
+              ai.articles_cited_by_llms;
+            document.getElementById('topLLM').textContent = data.data
+              .llm_performance.chatgpt
+              ? 'ChatGPT'
+              : 'N/A';
+
+            // Update status color
+            const statusEl = document.getElementById('citationRate');
+            const rate = parseFloat(ai.citation_rate);
+            if (rate > 50) {
+              statusEl.style.color = '#00ff00';
+            } else if (rate > 10) {
+              statusEl.style.color = '#ffff00';
+            } else {
+              statusEl.style.color = '#ff6b6b';
+            }
+          }
+        } catch (error) {
+          console.error('Error loading metrics:', error);
+        }
       }
 
+      async function loadCitationsData() {
+        const container = document.getElementById('citationsContent');
+        container.innerHTML = '<p style="color: #999">Loading citations...</p>';
+
+        try {
+          const response = await fetch(`${API_BASE}/metrics/ai-citations`);
+          const data = await response.json();
+
+          if (data.success) {
+            const report = data.data.report;
+            const comparison = data.data.llm_comparison;
+
+            let html = `
+              <div class="result-item" style="margin-bottom: 20px;">
+                <h3>📊 Citation Summary</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <strong>Total Articles Tracked:</strong> ${report.summary.total_tracked}
+                  </div>
+                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <strong>Total Citations:</strong> ${report.summary.total_citations}
+                  </div>
+                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <strong>Citation Rate:</strong> ${report.summary.citation_rate.toFixed(1)}%
+                  </div>
+                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <strong>Period:</strong> ${report.period}
+                  </div>
+                </div>
+              </div>
+
+              <div class="result-item" style="margin-bottom: 20px;">
+                <h3>🤖 LLM Performance</h3>
+                <div style="margin-top: 15px;">
+            `;
+
+            Object.entries(comparison.llms).forEach(([llm, stats]) => {
+              const color =
+                stats.citation_rate > 50
+                  ? '#4CAF50'
+                  : stats.citation_rate > 0
+                    ? '#FFC107'
+                    : '#f44336';
+              html += `
+                <div style="margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-left: 4px solid ${color}; border-radius: 4px;">
+                  <strong>${llm.toUpperCase()}</strong>
+                  <span style="float: right; color: ${color}; font-weight: bold;">
+                    ${stats.citation_rate.toFixed(1)}% (${stats.citations}/${stats.total_checks})
+                  </span>
+                </div>
+              `;
+            });
+
+            html += `
+                </div>
+              </div>
+
+              <div class="result-item">
+                <h3>📈 Top Cited Articles</h3>
+                <div style="margin-top: 15px;">
+            `;
+
+            report.top_cited_articles.forEach((article) => {
+              html += `
+                <div style="margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+                  <strong>${article.title}</strong><br>
+                  <small>Topic: ${article.topic} | Score: ${article.citation_score.toFixed(1)}%</small>
+                </div>
+              `;
+            });
+
+            html += `
+                </div>
+              </div>
+            `;
+
+            container.innerHTML = html;
+          } else {
+            container.innerHTML =
+              '<p style="color: #f44336;">Error loading citations data</p>';
+          }
+        } catch (error) {
+          container.innerHTML = `<p style="color: #f44336;">Error: ${error.message}</p>`;
+        }
+      }
+
+      async function loadCompetitorIntel() {
+        const brand = document.getElementById('competitorBrand').value.trim();
+        const competitorsStr = document
+          .getElementById('competitorList')
+          .value.trim();
+        const competitors = competitorsStr.split(',').map((c) => c.trim());
+        const container = document.getElementById('competitorsContent');
+
+        if (!brand) {
+          showError('Please enter a brand name');
+          return;
+        }
+
+        container.innerHTML =
+          '<p style="color: #999">Loading competitor analysis...</p>';
+
+        try {
+          const response = await fetch(
+            `${API_BASE}/metrics/competitor-intelligence`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ brand, competitors }),
+            },
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            const gaps = data.data.gap_opportunities;
+            const dashboard = data.data.dashboard;
+
+            let html = `
+              <div class="result-item" style="margin-bottom: 20px;">
+                <h3>📊 Market Position</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <strong>Your Articles:</strong> ${dashboard.competitor_overview.your_articles}
+                  </div>
+                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <strong>Avg Competitor Articles:</strong> ${dashboard.competitor_overview.average_articles_per_competitor}
+                  </div>
+                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <strong>Coverage Gap:</strong> ${dashboard.competitor_overview.coverage_gap}
+                  </div>
+                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <strong>Market Position:</strong> ${dashboard.competitor_overview.market_position}
+                  </div>
+                </div>
+              </div>
+
+              <div class="result-item" style="margin-bottom: 20px;">
+                <h3>🕳️ Content Gaps - High Priority</h3>
+                <div style="margin-top: 15px;">
+            `;
+
+            gaps.gap_opportunities
+              .filter((g) => g.priority === 'high')
+              .forEach((gap) => {
+                html += `
+                <div style="margin-bottom: 12px; padding: 12px; background: #fff3cd; border-left: 4px solid #ff9800; border-radius: 4px;">
+                  <strong>📌 ${gap.topic}</strong><br>
+                  <small>Competitors: ${gap.competitor_dominance.join(', ')}</small><br>
+                  <small style="color: #666;">Action: ${gap.recommended_action}</small>
+                </div>
+              `;
+              });
+
+            html += `
+                </div>
+              </div>
+
+              <div class="result-item">
+                <h3>✨ Quick Wins</h3>
+                <div style="margin-top: 15px;">
+            `;
+
+            gaps.low_hanging_fruit.forEach((fruit) => {
+              html += `
+                <div style="margin-bottom: 12px; padding: 12px; background: #e8f5e9; border-left: 4px solid #4CAF50; border-radius: 4px;">
+                  <strong>🎯 ${fruit.topic}</strong><br>
+                  <small>${fruit.reason}</small>
+                </div>
+              `;
+            });
+
+            html += `
+                </div>
+              </div>
+
+              <div class="result-item">
+                <h3>📋 30-Day Action Plan</h3>
+                <ol style="margin-top: 15px; padding-left: 20px;">
+            `;
+
+            dashboard['30_day_plan'].forEach((action) => {
+              html += `<li style="margin-bottom: 8px;">${action}</li>`;
+            });
+
+            html += `</ol></div>`;
+
+            container.innerHTML = html;
+          } else {
+            container.innerHTML =
+              '<p style="color: #f44336;">Error loading competitor data</p>';
+          }
+        } catch (error) {
+          container.innerHTML = `<p style="color: #f44336;">Error: ${error.message}</p>`;
+        }
+      }
+
+      async function loadFullMetrics() {
+        const container = document.getElementById('metricsContent');
+        container.innerHTML =
+          '<p style="color: #999">Loading full metrics dashboard...</p>';
+
+        try {
+          const response = await fetch(`${API_BASE}/metrics/dashboard`);
+          const data = await response.json();
+
+          if (data.success) {
+            const d = data.data;
+            let html = `
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                <div class="stat-box">
+                  <div class="number">${d.ai_visibility.total_articles}</div>
+                  <div class="label">Total Articles</div>
+                </div>
+                <div class="stat-box">
+                  <div class="number">${d.ai_visibility.citation_rate}</div>
+                  <div class="label">Citation Rate</div>
+                </div>
+                <div class="stat-box">
+                  <div class="number">${d.content_gaps.high_priority_gaps}</div>
+                  <div class="label">High Priority Gaps</div>
+                </div>
+                <div class="stat-box">
+                  <div class="number">${d.ai_visibility.status}</div>
+                  <div class="label">Status</div>
+                </div>
+              </div>
+
+              <div class="result-item" style="margin-bottom: 20px;">
+                <h3>🤖 LLM Performance</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px;">
+                  <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; text-align: center;">
+                    <strong>ChatGPT</strong><br>${d.llm_performance.chatgpt}
+                  </div>
+                  <div style="background: #f3e5f5; padding: 12px; border-radius: 8px; text-align: center;">
+                    <strong>Claude</strong><br>${d.llm_performance.claude}
+                  </div>
+                  <div style="background: #fce4ec; padding: 12px; border-radius: 8px; text-align: center;">
+                    <strong>Perplexity</strong><br>${d.llm_performance.perplexity}
+                  </div>
+                </div>
+              </div>
+
+              <div class="result-item">
+                <h3>📋 Next Actions</h3>
+                <ul style="margin-top: 15px; padding-left: 20px;">
+            `;
+
+            d.next_actions.forEach((action) => {
+              html += `<li style="margin-bottom: 8px;">${action}</li>`;
+            });
+
+            html += `</ul></div>`;
+            html += `<p style="text-align: center; color: #999; margin-top: 20px; font-size: 0.9em;">
+              Last updated: ${new Date(d.generated_at).toLocaleString()}
+            </p>`;
+
+            container.innerHTML = html;
+          }
+        } catch (error) {
+          container.innerHTML = `<p style="color: #f44336;">Error: ${error.message}</p>`;
+        }
+      }
+
+      async function trackNewArticleCitation(topic) {
+        try {
+          const response = await fetch(`${API_BASE}/metrics/track-citation`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              article_title: topic,
+              article_topic: topic.split(' ')[0],
+              article_url: `https://your-site.com/${topic.toLowerCase().replace(/\s+/g, '-')}`,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Citation tracking started for:', topic);
+            refreshMetricsDashboard();
+          }
+        } catch (error) {
+          console.error('Error tracking citation:', error);
+        }
+      }
+
+      // ============ ARTICLES MANAGEMENT ============
       async function loadStats() {
         try {
           const articlesRes = await fetch(`${API_BASE}/articles`);
@@ -642,11 +1129,6 @@
 
           const memoryRes = await fetch(`${API_BASE}/memory`);
           const memoryData = await memoryRes.json();
-
-          document.getElementById('totalArticles').textContent =
-            articlesData.count || 0;
-          document.getElementById('totalTopics').textContent =
-            memoryData.count || 0;
 
           // Load articles list
           const articlesList = document.getElementById('articlesList');
@@ -758,8 +1240,20 @@
         }
       }
 
-      // Load stats on page load
-      window.addEventListener('load', loadStats);
+      // ============ INITIALIZATION ============
+      window.addEventListener('load', () => {
+        loadStats();
+        refreshMetricsDashboard();
+
+        // Auto-refresh metrics every 30 seconds
+        metricsRefreshInterval = setInterval(refreshMetricsDashboard, 30000);
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (metricsRefreshInterval) {
+          clearInterval(metricsRefreshInterval);
+        }
+      });
     </script>
   </body>
 </html>

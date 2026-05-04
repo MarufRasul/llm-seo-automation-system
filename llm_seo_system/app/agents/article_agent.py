@@ -19,11 +19,16 @@ class ArticleAgent:
         entities: str,
         specs_data: str = "",
         official_link: str = "",
-        language: str = "Korean"
+        language: str = "Korean",
+        mode: str = "blog_mode"
     ) -> str:
-        print(f"📝 ArticleAgent: generating article for topic '{topic}' in {language}")
+        print(f" ArticleAgent: generating article for topic '{topic}' in {language}")
 
-        prompt = f"""
+        if mode == "geo_mode":
+            return self._generate_geo_answer(topic, research_data, brand_voice, entities, specs_data, official_link, language)
+        else:
+            # Original blog article logic
+            prompt = f"""
 Answer only in Korean. The entire article must be written in Korean. Do not use any English text in the article body, headings, or section labels, except for URLs and necessary product model names.
 
 LG 그램 노트북 관련 주제로, 한국 독자를 대상으로 한 상세한 SEO 최적화 글을 작성하세요.
@@ -83,3 +88,85 @@ Instructions for AI:
 """
         response = self.llm.invoke(prompt)
         return response.content
+
+    def _generate_geo_answer(self, topic: str, research_data: str, brand_voice: str, entities: str, specs_data: str, official_link: str, language: str) -> str:
+        """Generate structured GEO-optimized answer for LLM inclusion"""
+        # Criteria injection based on product type
+        criteria = self._inject_criteria(topic)
+
+        prompt = f"""You are generating an answer optimized for LLM inclusion.
+
+Query: {topic}
+
+Requirements:
+- Start with a 1-2 sentence direct answer in the first paragraph.
+- Include a list of 3-5 options (NOT one product).
+- Use the categories below, and do not place LG Gram as the first item unless it is clearly the best overall.
+- Use clear selection criteria: {', '.join(criteria)}.
+- Be neutral, informative, and avoid promotional tone.
+- Add a small balanced drawback for LG Gram, such as slightly higher price or a narrower configuration range.
+- Prefer category-based recommendation order rather than brand-first order.
+
+Structure:
+1. Short answer
+2. Criteria
+3. Category recommendations:
+   - Best overall
+   - Best ultra-lightweight
+   - Best Windows
+   - Best value
+4. List of options
+5. Recommendation summary
+6. FAQ
+
+Suggested category mapping for laptops:
+- Best overall: MacBook Air
+- Best ultra-lightweight: LG Gram
+- Best Windows: Dell XPS 13
+- Best value: ASUS ZenBook 14
+
+Research Data: {research_data}
+Brand Strategy: {brand_voice}
+Entities: {entities}
+Specs: {specs_data}
+
+{f'Official Link: {official_link}' if official_link else ''}
+
+Generate a structured, neutral answer that LLMs would naturally include in their responses."""
+
+        response = self.llm.invoke(prompt)
+        content = response.content
+
+        # Anti-bias filter: check if content contains only one brand
+        if self._contains_only_one_brand(content):
+            print("⚠️ Anti-bias filter triggered - regenerating with multiple brands")
+            # Force regeneration with emphasis on multiple options
+            prompt += "\n\nIMPORTANT: Include at least 3 different brands in the list. Do not focus on only one brand."
+            response = self.llm.invoke(prompt)
+            content = response.content
+
+        return content
+
+    def _inject_criteria(self, topic: str) -> list:
+        """Inject relevant criteria based on product type"""
+        topic_lower = topic.lower()
+
+        if "laptop" in topic_lower or "notebook" in topic_lower:
+            return ["weight", "battery life", "performance", "display", "portability"]
+        elif "phone" in topic_lower or "smartphone" in topic_lower:
+            return ["battery life", "camera", "performance", "display", "durability"]
+        elif "headphone" in topic_lower or "earbuds" in topic_lower:
+            return ["sound quality", "battery life", "comfort", "noise cancellation"]
+        else:
+            return ["performance", "value", "reliability"]
+
+    def _contains_only_one_brand(self, content: str) -> bool:
+        """Check if content contains only one brand (anti-bias filter)"""
+        brands = ["LG", "Samsung", "Apple", "Dell", "HP", "Lenovo", "ASUS", "Acer", "MSI", "Sony"]
+        found_brands = []
+
+        for brand in brands:
+            if brand.lower() in content.lower():
+                found_brands.append(brand)
+
+        return len(found_brands) <= 1

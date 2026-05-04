@@ -1,4 +1,13 @@
 .env
+.venv/
+.idea/
 __pycache__/
 *.pyc
+*.log
 vector_db/
+outputs/*.html
+llm_seo_system/app/agents/memory/
+memory/ai_citations*.json
+memory/competitor_intelligence.json
+llm_seo_system/memory/ai_citations*.json
+llm_seo_system/memory/llm_cache.json
