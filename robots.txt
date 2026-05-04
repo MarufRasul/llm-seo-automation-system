@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://marufrasul.github.io/llm-seo-automation-system/sitemap.xml
