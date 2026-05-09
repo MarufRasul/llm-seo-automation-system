@@ -35,7 +35,7 @@ class BatchContentGenerator:
             return []
         
         print(f"\n{'='*60}")
-        print(f"🎯 Generating content for: {config['brand_name']}")
+        print(f" Generating content for: {config['brand_name']}")
         print(f"{'='*60}")
         
         topics = get_brand_topics(brand_key)[:topics_limit]
@@ -81,7 +81,7 @@ class BatchContentGenerator:
         niche_results = []
         for idx, niche in enumerate(niches, 1):
             print(f"\n{'='*60}")
-            print(f"🎯 Generating content for niche [{idx}/{len(niches)}]: {niche}")
+            print(f" Generating content for niche [{idx}/{len(niches)}]: {niche}")
             print(f"{'='*60}")
             try:
                 result = self.workflow.run(topic=None, niche=niche)
@@ -113,7 +113,7 @@ class BatchContentGenerator:
             brands = list(BRAND_CONFIGS.keys())
         
         print(f"\n{'#'*60}")
-        print(f"# 🚀 BATCH GEO CONTENT GENERATION")
+        print(f"#  BATCH GEO CONTENT GENERATION")
         print(f"# Brands: {len(brands)} | Topics per brand: {topics_per_brand}")
         print(f"{'#'*60}\n")
         
@@ -164,10 +164,10 @@ class BatchContentGenerator:
         
         # Print summary
         print(f"\n{'='*60}")
-        print(f"📊 GENERATION REPORT")
+        print(f" GENERATION REPORT")
         print(f"{'='*60}")
         print(f"✅ Total Articles Generated: {report['total_articles']}")
-        print(f"📁 Report saved: {report_path}\n")
+        print(f" Report saved: {report_path}\n")
         
         for brand, articles in report["brands"].items():
             print(f"  {brand}: {len(articles)} articles")

@@ -52,6 +52,78 @@ class TopicDiscoveryAgent:
             score += 2
         return score
 
+    def generate_structured_queries(self, niche: str, brand: str = "") -> list:
+        """Generate 20-30 realistic search queries using intent patterns."""
+        niche_lower = niche.lower()
+
+        # Detect product domain for slot filling
+        if any(k in niche_lower for k in ["laptop", "notebook", "lg", "gram"]):
+            product = "laptop"
+            qualifiers = ["for students", "for work", "for college", "under $1000", "under 1kg", "2025", "2026"]
+            attributes = ["lightweight", "long battery life", "best performance", "thin and light", "ultra-portable"]
+            competitors = ["MacBook Air", "Dell XPS 13", "ASUS ZenBook", "Microsoft Surface", "Samsung Galaxy Book"]
+        elif any(k in niche_lower for k in ["salmon", "동원", "fish"]):
+            product = "salmon"
+            qualifiers = ["canned", "fresh", "smoked", "for cooking", "healthy", "Korean brand"]
+            attributes = ["omega-3", "wild caught", "low sodium", "premium quality", "affordable"]
+            competitors = ["Dongwon", "CJ", "Norwegian salmon", "Atlantic salmon"]
+        elif any(k in niche_lower for k in ["ceramic", "ceramics", "도자기"]):
+            product = "ceramic tableware"
+            qualifiers = ["handmade", "Korean", "modern", "traditional", "premium", "gifting"]
+            attributes = ["durable", "food-safe", "dishwasher-safe", "artisan", "eco-friendly"]
+            competitors = ["Le Creuset", "Jars Ceramics", "Revol", "Heath Ceramics"]
+        else:
+            product = niche
+            qualifiers = ["for beginners", "professional", "2025", "2026", "premium", "budget"]
+            attributes = ["best", "top rated", "most popular", "recommended"]
+            competitors = ["top brands", "alternatives"]
+
+        brand_str = brand if brand else ""
+        queries = []
+
+        # Pattern: best ___ for ___
+        for q in qualifiers[:4]:
+            queries.append(f"best {product} {q}")
+        if brand_str:
+            queries.append(f"best {brand_str} {product}")
+
+        # Pattern: ___ vs ___
+        for comp in competitors[:3]:
+            if brand_str:
+                queries.append(f"{brand_str} vs {comp}")
+            queries.append(f"best {product} vs {comp}")
+
+        # Pattern: how to choose ___
+        queries.append(f"how to choose the best {product}")
+        queries.append(f"how to pick a {product} {qualifiers[0] if qualifiers else ''}")
+
+        # Pattern: alternatives to ___
+        if brand_str:
+            queries.append(f"alternatives to {brand_str} {product}")
+        for comp in competitors[:2]:
+            queries.append(f"alternatives to {comp}")
+
+        # Pattern: ___ with attribute
+        for attr in attributes[:4]:
+            queries.append(f"best {product} with {attr}")
+            queries.append(f"{product} {attr}")
+
+        # Pattern: top ___ list
+        queries.append(f"top 5 {product}s in 2026")
+        queries.append(f"top {product}s for professionals")
+
+        # Deduplicate and limit to 25
+        seen = set()
+        unique = []
+        for q in queries:
+            q_clean = q.strip()
+            if q_clean and q_clean not in seen:
+                seen.add(q_clean)
+                unique.append(q_clean)
+
+        print(f" TopicDiscoveryAgent: generated {len(unique)} structured queries for '{niche}'")
+        return unique[:25]
+
     def discover_topic(self, niche: str) -> dict:
         """Discover a high-potential article topic for the given niche."""
         print(f"🧠 TopicDiscoveryAgent: discovering topic for niche '{niche}'")

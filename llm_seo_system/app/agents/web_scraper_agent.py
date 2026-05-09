@@ -48,7 +48,7 @@ class WebScraperAgent:
         
         for attempt in range(self.max_retries):
             try:
-                logger.info(f"🔍 Scraping {url} (attempt {attempt + 1}/{self.max_retries})")
+                logger.info(f" Scraping {url} (attempt {attempt + 1}/{self.max_retries})")
                 
                 response = requests.get(
                     url,
@@ -207,7 +207,7 @@ class WebScraperAgent:
         brand_name = brand_config.get("brand_name", "Unknown")
         product_pages = brand_config.get("product_pages", [])
         
-        logger.info(f"🔍 Starting brand scrape for {brand_name}")
+        logger.info(f" Starting brand scrape for {brand_name}")
         
         aggregated_data = {
             "brand": brand_name,
@@ -302,7 +302,7 @@ def get_website_data(brand_config: Dict) -> Dict:
     scraper = WebScraperAgent()
     
     try:
-        logger.info(f"📥 Scraping {brand_config.get('brand_name')} website...")
+        logger.info(f" Scraping {brand_config.get('brand_name')} website...")
         
         scraped = scraper.scrape_brand_website(brand_config)
         extracted = scraper.extract_product_data(scraped)

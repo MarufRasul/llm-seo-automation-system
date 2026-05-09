@@ -4,7 +4,9 @@ Flask API Server for AI SEO Blog Generator
 import sys
 import os
 import re
+import io
 from datetime import datetime
+from contextlib import redirect_stdout
 
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -32,6 +34,23 @@ batch_generator = BatchContentGenerator()
 freshness_agent = DataFreshnessAgent()
 citation_tracker = AICitationTrackerAgent()
 competitor_intel = CompetitorIntelligenceAgent()
+
+
+class TeeLogCapture(io.StringIO):
+    """Capture workflow prints while still showing them in the backend terminal."""
+
+    def __init__(self, stream):
+        super().__init__()
+        self.stream = stream
+
+    def write(self, text):
+        self.stream.write(text)
+        self.stream.flush()
+        return super().write(text)
+
+
+def _split_logs(log_text: str):
+    return [line for line in log_text.splitlines() if line.strip()]
 
 
 @app.route("/api/health", methods=["GET"])
@@ -65,6 +84,7 @@ def generate_article():
         "topic": "LG Gram laptop for students"
     }
     """
+    log_capture = TeeLogCapture(sys.stdout)
     try:
         data = request.json
         topic = data.get("topic", "").strip()
@@ -73,42 +93,32 @@ def generate_article():
         if not topic and not niche:
             return jsonify({"error": "Topic or niche is required"}), 400
 
-        if niche and not topic:
-            print(f"\n📝 Discovering best topic for niche: {niche}")
-            result = workflow.run(topic=None, niche=niche)
-        else:
-            print(f"\n📝 Generating article for: {topic}")
-            result = workflow.run(topic)
+        with redirect_stdout(log_capture):
+            if niche and not topic:
+                print(f"\n Discovering best topic for niche: {niche}")
+                result = workflow.run(topic=None, niche=niche)
+            else:
+                print(f"\n Generating article for: {topic}")
+                result = workflow.run(topic)
 
-        # Save article to file using the generated or discovered topic
-        article_topic = result.get("topic") or topic
+            # Save article to file using the generated or discovered topic
+            article_topic = result.get("topic") or topic
 
-        if result.get("mode") == "geo_mode":
-            # Handle GEO mode response
-            article_path = storage.save_article(article_topic, result["structured_answer"])
-            response_payload = {
-                "topic": result["topic"],
-                "mode": "geo_mode",
-                "structured_answer": result["structured_answer"],
-                "html_answer": result["html_answer"],
-                "file_path": article_path,
-            }
-        else:
-            # Handle traditional blog mode response
             if result.get("html_article"):
                 article_path = storage.save_article_html(article_topic, result["html_article"])
             else:
                 article_path = storage.save_article(article_topic, result["article"])
 
-            response_payload = {
-                "topic": result["topic"],
-                "raw_article": result["raw_article"][:500] + "...",  # Preview
-                "seo_queries": result["seo_queries"],
-                "faq": result["faq"],
-                "optimized_article": result["optimized_article"][:500] + "...",
-                "seo_score": result["seo_score"][:500] + "...",
-                "file_path": article_path,
-            }
+        response_payload = {
+            "topic": result["topic"],
+            "raw_article": result["raw_article"][:500] + "...",  # Preview
+            "seo_queries": result["seo_queries"],
+            "faq": result["faq"],
+            "optimized_article": result["optimized_article"][:500] + "...",
+            "seo_score": result["seo_score"][:500] + "...",
+            "file_path": article_path,
+            "logs": _split_logs(log_capture.getvalue()),
+        }
         if result.get("published_url"):
             response_payload["published_url"] = result["published_url"]
 
@@ -118,10 +128,11 @@ def generate_article():
         }), 200
 
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f" Error: {str(e)}")
         return jsonify({
             "success": False,
-            "error": str(e)
+            "error": str(e),
+            "logs": _split_logs(log_capture.getvalue()),
         }), 500
 
 
@@ -135,7 +146,7 @@ def discover_topic():
         if not niche:
             return jsonify({"error": "Niche is required"}), 400
 
-        print(f"\n🔎 Discovering topic for niche: {niche}")
+        print(f"\n Discovering topic for niche: {niche}")
         discovery = workflow.topic_discovery_agent.discover_topic(niche)
 
         return jsonify({
@@ -144,7 +155,7 @@ def discover_topic():
         }), 200
 
     except Exception as e:
-        print(f"❌ Topic discovery error: {str(e)}")
+        print(f" Topic discovery error: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e)
@@ -426,7 +437,7 @@ def batch_generate():
         brands = data.get("brands", list(BRAND_CONFIGS.keys()))
         topics_per_brand = data.get("topics_per_brand", 2)
 
-        print(f"\n📦 Batch generation started: {len(brands)} brands, {topics_per_brand} topics each")
+        print(f"\n Batch generation started: {len(brands)} brands, {topics_per_brand} topics each")
 
         # Create new generator for this batch
         generator = BatchContentGenerator()
@@ -442,7 +453,7 @@ def batch_generate():
         }), 200
 
     except Exception as e:
-        print(f"❌ Batch generation error: {str(e)}")
+        print(f" Batch generation error: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e)
@@ -518,7 +529,7 @@ def batch_doshinji():
         data = request.json or {}
         topics_limit = data.get("topics_limit", 3)
 
-        print(f"\n🍶 Doshinji ceramics content generation: {topics_limit} topics")
+        print(f"\n Doshinji ceramics content generation: {topics_limit} topics")
 
         generator = BatchContentGenerator()
         results = generator.generate_for_brand("doshinji_ceramics", topics_limit=topics_limit)
@@ -660,7 +671,7 @@ def get_metrics_dashboard():
                 "total_articles": article_count,
                 "articles_cited_by_llms": citation_summary.get("total_citations", 0),
                 "citation_rate": f"{citation_summary.get('citation_rate', 0):.1f}%",
-                "status": "✅ Active" if citation_summary.get("citation_rate", 0) > 10 else "⏳ Building"
+                "status": "✅ Active" if citation_summary.get("citation_rate", 0) > 10 else " Building"
             },
             "content_gaps": {
                 "high_priority_gaps": 8,
@@ -668,9 +679,9 @@ def get_metrics_dashboard():
                 "recommended_topics_this_week": 5
             },
             "llm_performance": {
-                "chatgpt": "📈 Strong",
-                "claude": "📊 Stable",
-                "perplexity": "📈 Growing"
+                "chatgpt": " Strong",
+                "claude": " Stable",
+                "perplexity": " Growing"
             },
             "next_actions": [
                 "Track 5 new articles for citations",
@@ -690,8 +701,68 @@ def get_metrics_dashboard():
         }), 500
 
 
+@app.route("/api/geo-pipeline", methods=["POST"])
+def geo_pipeline():
+    """
+    Run the full GEO Pipeline: Query → Gap → Strategy → Article → Validate
+    POST /api/geo-pipeline
+    {
+        "brand": "LG",
+        "niche": "LG laptops"
+    }
+    """
+    log_capture = TeeLogCapture(sys.stdout)
+    try:
+        data = request.json
+        brand = data.get("brand", "").strip()
+        niche = data.get("niche", "").strip()
+
+        if not brand and not niche:
+            return jsonify({"error": "brand or niche is required"}), 400
+
+        if not brand:
+            brand = niche.split()[0]
+        if not niche:
+            niche = brand
+
+        with redirect_stdout(log_capture):
+            result = workflow.run_geo_pipeline(brand=brand, niche=niche)
+
+            article_topic = result.get("topic") or niche
+            if result.get("html_article"):
+                article_path = storage.save_article_html(article_topic, result["html_article"])
+            else:
+                article_path = storage.save_article(article_topic, result["article"])
+
+        response_payload = {
+            "topic": result["topic"],
+            "raw_article": result["raw_article"],
+            "seo_score": result["seo_score"],
+            "file_path": article_path,
+            "gap_analysis": result.get("gap_analysis", []),
+            "strategy": result.get("strategy", {}),
+            "validation": result.get("validation", {}),
+            "presence_check": result.get("presence_check", {}),
+            "iterations": result.get("iterations", 1),
+            "queries_generated": result.get("queries_generated", []),
+            "logs": _split_logs(log_capture.getvalue()),
+        }
+        if result.get("published_url"):
+            response_payload["published_url"] = result["published_url"]
+
+        return jsonify({"success": True, "data": response_payload}), 200
+
+    except Exception as e:
+        print(f" GEO Pipeline error: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "logs": _split_logs(log_capture.getvalue()),
+        }), 500
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
-    print("🚀 Starting AI SEO Blog Generator API...")
-    print(f"📍 Running on http://localhost:{port}")
+    print(" Starting AI SEO Blog Generator API...")
+    print(f" Running on http://localhost:{port}")
     app.run(debug=True, host="0.0.0.0", port=port)

@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="google-site-verification"
+      content="iTrBveBqjTXSVYCCgGLyIzxxs8OIHWYbnYHcuzJwqW8"
+    />
     <title>AI SEO Blog Generator - GEO Content Engine</title>
     <style>
       * {
@@ -146,6 +150,47 @@
 
       .loading.active {
         display: block;
+      }
+
+      .agent-logs {
+        display: none;
+        margin-top: 18px;
+        background: #111827;
+        color: #d1d5db;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #374151;
+      }
+
+      .agent-logs.active {
+        display: block;
+      }
+
+      .agent-logs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: #1f2937;
+        color: #f9fafb;
+        font-size: 0.9em;
+        font-weight: 700;
+      }
+
+      .agent-logs-body {
+        max-height: 260px;
+        overflow-y: auto;
+        padding: 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85em;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .agent-log-line {
+        padding: 2px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       }
 
       .spinner {
@@ -400,6 +445,126 @@
         margin-top: 40px;
       }
 
+      /* GEO Pipeline styles */
+      .geo-pipeline-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 16px;
+        margin-top: 20px;
+      }
+      @media (max-width: 1100px) {
+        .geo-pipeline-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 600px) {
+        .geo-pipeline-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .geo-panel {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 16px;
+        border-left: 4px solid #667eea;
+      }
+      .geo-panel h4 {
+        margin: 0 0 10px;
+        color: #333;
+        font-size: 1em;
+        font-weight: 700;
+      }
+      .gap-item {
+        background: #fff;
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        border: 1px solid #e5e7eb;
+        font-size: 0.88em;
+      }
+      .gap-score {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 0.82em;
+        float: right;
+      }
+      .gap-tag {
+        display: inline-block;
+        background: #fee2e2;
+        color: #b91c1c;
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 0.78em;
+        margin: 2px 1px;
+      }
+      .strategy-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid #eee;
+        font-size: 0.9em;
+      }
+      .strategy-row:last-child {
+        border-bottom: none;
+      }
+      .strategy-key {
+        color: #666;
+      }
+      .strategy-val {
+        font-weight: 600;
+        color: #333;
+      }
+      .validation-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+      }
+      .validation-pass {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .validation-fail {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .cite-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+        font-size: 0.9em;
+      }
+      .cite-row:last-child {
+        border-bottom: none;
+      }
+      .cite-label {
+        color: #555;
+        font-weight: 600;
+      }
+      .cite-yes {
+        color: #166534;
+        font-weight: 700;
+        font-size: 1.1em;
+      }
+      .cite-no {
+        color: #991b1b;
+        font-weight: 700;
+        font-size: 1.1em;
+      }
+      .cite-arrow {
+        text-align: center;
+        font-size: 1.6em;
+        padding: 6px 0;
+        color: #667eea;
+      }
+
       /* Dashboard styles */
       .tab-btn {
         background: none;
@@ -471,6 +636,64 @@
         <div class="card">
           <h2><span class="icon"></span> Content Generator</h2>
 
+          <!-- MODE SELECTOR -->
+          <div
+            style="
+              display: flex;
+              gap: 0;
+              margin-bottom: 20px;
+              border-radius: 8px;
+              overflow: hidden;
+              border: 2px solid #667eea;
+            "
+          >
+            <button
+              id="modeBtnGeo"
+              onclick="setMode('geo')"
+              style="
+                flex: 1;
+                border-radius: 0;
+                border: none;
+                padding: 12px;
+                font-weight: 700;
+                font-size: 0.95em;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                cursor: pointer;
+              "
+            >
+              GEO Pipeline
+            </button>
+            <button
+              id="modeBtnBlog"
+              onclick="setMode('blog')"
+              style="
+                flex: 1;
+                border-radius: 0;
+                border: none;
+                padding: 12px;
+                font-weight: 700;
+                font-size: 0.95em;
+                background: #f3f4f6;
+                color: #888;
+                cursor: pointer;
+              "
+            >
+              Blog Mode
+            </button>
+          </div>
+          <p
+            id="modeDesc"
+            style="
+              font-size: 0.85em;
+              color: #667eea;
+              margin: -10px 0 16px;
+              font-weight: 600;
+            "
+          >
+            Query → Gap Analysis → Strategy → GEO Article → Validate
+          </p>
+
           <div class="error" id="error"></div>
           <div class="success" id="success"></div>
           <div
@@ -485,32 +708,74 @@
             ></p>
           </div>
 
-          <div class="form-group">
-            <label for="topic">Topic to Research & Generate</label>
-            <input
-              type="text"
-              id="topic"
-              placeholder="e.g., LG Gram laptop for students"
-              value="LG Gram laptop for students"
-            />
+          <!-- GEO MODE FIELDS -->
+          <div id="geoFields">
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px"
+            >
+              <div class="form-group" style="margin: 0">
+                <label for="geoBrand">Target Brand</label>
+                <input
+                  type="text"
+                  id="geoBrand"
+                  placeholder="e.g., LG"
+                  value="LG"
+                />
+              </div>
+              <div class="form-group" style="margin-bottom: 0">
+                <label for="geoNiche">Niche / Product Area</label>
+                <input
+                  type="text"
+                  id="geoNiche"
+                  placeholder="e.g., LG laptops"
+                  value="LG laptops"
+                />
+              </div>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="niche">Optional Niche (for topic discovery)</label>
-            <input
-              type="text"
-              id="niche"
-              placeholder="e.g., LG전자 노트북, 동원 연어, "
-            />
+          <!-- BLOG MODE FIELDS -->
+          <div id="blogFields" style="display: none">
+            <div class="form-group">
+              <label for="topic">Topic</label>
+              <input
+                type="text"
+                id="topic"
+                placeholder="e.g., LG Gram laptop for students"
+                value="LG Gram laptop for students"
+              />
+            </div>
+            <div class="form-group">
+              <label for="niche">Optional Niche</label>
+              <input type="text" id="niche" placeholder="e.g., LG전자 노트북" />
+            </div>
           </div>
 
-          <button id="generateBtn" onclick="generateArticle()">
-            Generate AI-Optimized Article
+          <button
+            id="generateBtn"
+            onclick="dispatchGenerate()"
+            style="margin-top: 16px"
+          >
+            Run GEO Pipeline
           </button>
 
-          <div class="loading" id="loading">
+          <div
+            class="loading"
+            id="loading"
+            style="display: none; text-align: center; padding: 20px"
+          >
             <div class="spinner"></div>
-            <p>Generating content... this may take 2-3 minutes</p>
+            <p id="loadingMsg">Running GEO pipeline... 2-3 minutes</p>
+          </div>
+
+          <div class="agent-logs" id="agentLogs">
+            <div class="agent-logs-header">
+              <span>Agent Logs</span>
+              <span id="agentLogsCount">0 lines</span>
+            </div>
+            <div class="agent-logs-body" id="agentLogsBody">
+              Logs will appear after generation starts...
+            </div>
           </div>
         </div>
 
@@ -541,6 +806,41 @@
           >
             Refresh Metrics
           </button>
+        </div>
+      </div>
+
+      <!-- GEO Pipeline Results (shown after run) -->
+      <div
+        class="card"
+        id="geoPipelineCard"
+        style="display: none; margin-bottom: 30px"
+      >
+        <h2><span class="icon"></span> GEO Pipeline Results</h2>
+        <div class="geo-pipeline-grid" id="geoPipelineResults">
+          <div class="geo-panel">
+            <h4>Gap Analysis</h4>
+            <div id="geoGapList">
+              <p style="color: #999; font-size: 0.9em">No data yet</p>
+            </div>
+          </div>
+          <div class="geo-panel">
+            <h4>Strategy</h4>
+            <div id="geoStrategyPanel">
+              <p style="color: #999; font-size: 0.9em">No data yet</p>
+            </div>
+          </div>
+          <div class="geo-panel">
+            <h4>✅ Validation</h4>
+            <div id="geoValidationPanel">
+              <p style="color: #999; font-size: 0.9em">No data yet</p>
+            </div>
+          </div>
+          <div class="geo-panel">
+            <h4>Citation Check</h4>
+            <div id="geoCitationPanel">
+              <p style="color: #999; font-size: 0.9em">No data yet</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -694,6 +994,53 @@
     <script>
       const API_BASE = 'http://localhost:5000/api';
       let metricsRefreshInterval;
+      let currentMode = 'geo'; // default: GEO Pipeline
+
+      // ============ MODE SELECTOR ============
+      function setMode(mode) {
+        currentMode = mode;
+        const btnGeo = document.getElementById('modeBtnGeo');
+        const btnBlog = document.getElementById('modeBtnBlog');
+        const geoFields = document.getElementById('geoFields');
+        const blogFields = document.getElementById('blogFields');
+        const desc = document.getElementById('modeDesc');
+        const btn = document.getElementById('generateBtn');
+        const msg = document.getElementById('loadingMsg');
+
+        if (mode === 'geo') {
+          btnGeo.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+          btnGeo.style.color = 'white';
+          btnBlog.style.background = '#f3f4f6';
+          btnBlog.style.color = '#888';
+          geoFields.style.display = 'block';
+          blogFields.style.display = 'none';
+          desc.textContent =
+            'Query → Gap Analysis → Strategy → GEO Article → Validate';
+          desc.style.color = '#667eea';
+          btn.textContent = ' Run GEO Pipeline';
+          msg.textContent = 'Running GEO pipeline... 2-3 minutes';
+        } else {
+          btnBlog.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+          btnBlog.style.color = 'white';
+          btnGeo.style.background = '#f3f4f6';
+          btnGeo.style.color = '#888';
+          geoFields.style.display = 'none';
+          blogFields.style.display = 'block';
+          desc.textContent =
+            'Classic SEO blog article with EEAT, FAQ, and Schema';
+          desc.style.color = '#888';
+          btn.textContent = ' Generate Blog Article';
+          msg.textContent = 'Generating blog article... 2-3 minutes';
+        }
+      }
+
+      function dispatchGenerate() {
+        if (currentMode === 'geo') {
+          runGeoPipeline();
+        } else {
+          generateArticle();
+        }
+      }
 
       // ============ TAB SWITCHING ============
       function switchTab(tabName) {
@@ -743,9 +1090,14 @@
         const loading = document.getElementById('loading');
 
         btn.disabled = true;
-        loading.classList.add('active');
+        loading.style.display = 'block';
         hideError();
         hideSuccess();
+        resetAgentLogs();
+        renderAgentLogs([
+          'Request sent to backend...',
+          'Waiting for full agent pipeline to finish...',
+        ]);
 
         try {
           const response = await fetch(`${API_BASE}/generate`, {
@@ -760,6 +1112,7 @@
           const data = await response.json();
 
           if (data.success) {
+            renderAgentLogs(data.data.logs || []);
             document.getElementById('resultRaw').textContent =
               data.data.raw_article;
             document.getElementById('resultSeo').textContent =
@@ -792,14 +1145,312 @@
               trackNewArticleCitation(topic);
             }, 1000);
           } else {
+            renderAgentLogs(data.logs || []);
             showError(` Error: ${data.error}`);
           }
         } catch (error) {
           showError(`Network error: ${error.message}`);
         } finally {
           btn.disabled = false;
-          loading.classList.remove('active');
+          loading.style.display = 'none';
         }
+      }
+
+      // ============ GEO PIPELINE ============
+      async function runGeoPipeline() {
+        const brand = document.getElementById('geoBrand').value.trim();
+        const niche = document.getElementById('geoNiche').value.trim();
+
+        if (!brand && !niche) {
+          showError('Please enter a brand or niche');
+          return;
+        }
+
+        hideError();
+        hideSuccess();
+
+        const btn = document.getElementById('generateBtn');
+        const loading = document.getElementById('loading');
+        btn.disabled = true;
+        loading.style.display = 'block';
+        document.getElementById('geoPipelineCard').style.display = 'none';
+
+        resetAgentLogs();
+        renderAgentLogs([
+          ' GEO Pipeline request sent...',
+          'Waiting for gap analysis + article generation...',
+        ]);
+
+        const logsPanel = document.getElementById('agentLogs');
+        const logsBody = document.getElementById('agentLogsBody');
+        const logsCount = document.getElementById('agentLogsCount');
+
+        try {
+          const response = await fetch(`${API_BASE}/geo-pipeline`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ brand, niche }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            const d = data.data;
+
+            // Render logs
+            const logs = d.logs || [];
+            logsBody.innerHTML = logs.length
+              ? logs
+                  .map(
+                    (l) => `<div class="agent-log-line">${escapeHtml(l)}</div>`,
+                  )
+                  .join('')
+              : '<div class="agent-log-line">No logs returned.</div>';
+            logsCount.textContent = `${logs.length} lines`;
+            logsBody.scrollTop = logsBody.scrollHeight;
+
+            // ── Gap Analysis ──────────────────────────────────────────────
+            const gapList = d.gap_analysis || [];
+            let gapHtml = '';
+            if (gapList.length === 0) {
+              gapHtml = '<p style="color:#999;font-size:.9em">No gap data</p>';
+            } else {
+              gapList.forEach((item, i) => {
+                const an = item.analysis || {};
+                const brandsFound = (an.brands_found || []).join(', ') || '—';
+                const brandPresent = an.target_brand_present;
+                const brandInLlm = an.brand_in_llm;
+                const brandInSerp = an.brand_in_serp;
+                const serpBrands = (an.serp_brands || []).join(', ') || null;
+                const hasFeatured = an.has_featured_snippet;
+                const hasSerp = serpBrands !== null;
+                const tags = (item.gaps || [])
+                  .map((g) => `<span class="gap-tag">${escapeHtml(g)}</span>`)
+                  .join('');
+                gapHtml += `
+                  <div class="gap-item">
+                    <span class="gap-score">${item.score}</span>
+                    <strong>#${i + 1}</strong> ${escapeHtml((item.query || '').substring(0, 48))}${(item.query || '').length > 48 ? '…' : ''}
+                    <div style="margin-top:5px;font-size:.82em;color:#555">
+                      LLM brands: ${escapeHtml(brandsFound)}
+                    </div>
+                    ${
+                      hasSerp
+                        ? `<div style="font-size:.82em;color:#555;margin-top:1px">
+                      SERP brands: ${escapeHtml(serpBrands || '—')}
+                      ${hasFeatured ? '&nbsp;<span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-size:.9em">featured snippet</span>' : ''}
+                    </div>`
+                        : ''
+                    }
+                    <div style="font-size:.82em;margin-top:4px;display:flex;flex-wrap:wrap;gap:6px">
+                      <span>LLM: <strong style="color:${brandInLlm ? '#166534' : '#991b1b'}">${brandInLlm ? '✓' : '✗'}</strong></span>
+                      ${hasSerp ? `<span>SERP: <strong style="color:${brandInSerp ? '#166534' : '#991b1b'}">${brandInSerp ? '✓' : '✗'}</strong></span>` : ''}
+                      <span>List: <strong>${an.has_list ? '✓' : '✗'}</strong></span>
+                      <span>Criteria: <strong>${an.has_criteria ? '✓' : '✗'}</strong></span>
+                    </div>
+                    <div style="margin-top:4px">${tags || '<span style="color:#999;font-size:.8em">no gaps</span>'}</div>
+                  </div>`;
+              });
+            }
+            document.getElementById('geoGapList').innerHTML = gapHtml;
+
+            // ── Strategy ──────────────────────────────────────────────────
+            const strat = (d.strategy || {}).strategy || {};
+            const insertion = strat.brand_insertion || {};
+            const cats = (strat.categories || [])
+              .map((c) => `<li style="font-size:.87em">${escapeHtml(c)}</li>`)
+              .join('');
+            const stratHtml = `
+              <div class="strategy-row"><span class="strategy-key">Format</span><span class="strategy-val">${escapeHtml(strat.format || '-')}</span></div>
+              <div class="strategy-row"><span class="strategy-key">Brand position</span><span class="strategy-val" style="color:#667eea">${escapeHtml(insertion.position || strat.brand_position || '-')}</span></div>
+              <div class="strategy-row" style="flex-direction:column;align-items:flex-start;gap:2px">
+                <span class="strategy-key" style="margin-bottom:2px">Reason</span>
+                <span style="font-size:.84em;color:#444;font-style:italic">${escapeHtml(insertion.reason || '-')}</span>
+              </div>
+              <div class="strategy-row" style="flex-direction:column;align-items:flex-start;gap:2px;border-bottom:none">
+                <span class="strategy-key" style="margin-bottom:2px">Categories</span>
+                <ul style="margin:0;padding:0 0 0 14px">${cats || '<li style="color:#999;font-size:.87em">—</li>'}</ul>
+              </div>`;
+            document.getElementById('geoStrategyPanel').innerHTML = stratHtml;
+
+            // ── Validation ────────────────────────────────────────────────
+            const val = d.validation || {};
+            const validBadge = val.valid
+              ? '<span class="validation-badge validation-pass">✓ PASS</span>'
+              : '<span class="validation-badge validation-fail">✗ ISSUES</span>';
+            const issueList = (val.issues || [])
+              .map(
+                (iss) =>
+                  `<li style="font-size:.84em;color:#b91c1c">${escapeHtml(iss)}</li>`,
+              )
+              .join('');
+            const valHtml = `
+              ${validBadge}
+              <div class="strategy-row"><span class="strategy-key">Brands found</span><span class="strategy-val">${val.brand_count ?? '-'}</span></div>
+              <div class="strategy-row"><span class="strategy-key">Has list</span><span class="strategy-val">${val.has_list ? '✓ Yes' : '✗ No'}</span></div>
+              <div class="strategy-row"><span class="strategy-key">Has categories</span><span class="strategy-val">${val.has_categories ? '✓ Yes' : '✗ No'}</span></div>
+              <div class="strategy-row" style="border-bottom:${issueList ? '1px solid #eee' : 'none'}"><span class="strategy-key">Quick answer</span><span class="strategy-val">${val.has_quick_answer ? '✓ Yes' : '✗ No'}</span></div>
+              ${issueList ? `<ul style="margin-top:8px;padding:0 0 0 14px">${issueList}</ul>` : ''}
+              ${d.file_path ? `<div style="margin-top:8px;font-size:.8em;color:#888">Saved: ${escapeHtml(d.file_path)}</div>` : ''}`;
+            document.getElementById('geoValidationPanel').innerHTML = valHtml;
+
+            // ── Before / After Citation Check (real LLM calls) ────────────
+            const pc = d.presence_check || {};
+            const beforePresent = (pc.before || {}).present;
+            const afterPresent = (pc.after || {}).present;
+            const impacted = pc.impact;
+            const brandLabel = escapeHtml(pc.brand || brand || 'LG');
+            const beforePreview = escapeHtml(
+              ((pc.before || {}).answer_preview || '').substring(0, 120),
+            );
+            const afterPreview = escapeHtml(
+              ((pc.after || {}).answer_preview || '').substring(0, 120),
+            );
+
+            const hasPc = pc && Object.keys(pc).length > 0;
+            const multiResults = pc.results || {};
+            const hasMulti = Object.keys(multiResults).length > 0;
+            const iterCount = d.iterations || 1;
+
+            let citeHtml = '';
+            // Iterations badge
+            if (iterCount > 1) {
+              citeHtml += `<div style="margin-bottom:10px;padding:6px 10px;background:#fef3c7;color:#92400e;border-radius:6px;font-size:.83em;font-weight:600">⚡ Auto-iterated ${iterCount}x to improve result</div>`;
+            }
+
+            if (hasMulti) {
+              // ── LLM Impact Score (big number) ──
+              const impactScore = pc.impact_score ?? 0;
+              const impactCount = pc.impact_count ?? 0;
+              const modelCount =
+                pc.model_count ?? Object.keys(multiResults).length;
+              const scorePct = Math.round(impactScore * 100);
+              const scoreColor =
+                scorePct >= 70
+                  ? '#166534'
+                  : scorePct >= 40
+                    ? '#92400e'
+                    : '#991b1b';
+              const scoreBg =
+                scorePct >= 70
+                  ? '#dcfce7'
+                  : scorePct >= 40
+                    ? '#fef3c7'
+                    : '#fee2e2';
+              citeHtml += `
+                <div style="background:${scoreBg};border-radius:8px;padding:10px 12px;margin-bottom:10px;text-align:center">
+                  <div style="font-size:2em;font-weight:800;color:${scoreColor};line-height:1">${scorePct}%</div>
+                  <div style="font-size:.8em;color:${scoreColor};font-weight:600;margin-top:2px">
+                    LLM Impact Score &nbsp;·&nbsp; ${impactCount}/${modelCount} models
+                  </div>
+                </div>`;
+
+              // ── Per-model rows ──
+              Object.entries(multiResults).forEach(([modelName, mr]) => {
+                const bOk = mr.before && mr.before.present;
+                const aOk = mr.after && mr.after.present;
+                const imp = mr.impact;
+                const failReason = mr.failure_reason;
+                citeHtml += `
+                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;margin-bottom:6px">
+                    <div style="font-weight:700;font-size:.88em;margin-bottom:4px">${escapeHtml(modelName)}</div>
+                    <div style="display:flex;gap:6px;align-items:center;font-size:.85em">
+                      <span>BEFORE <span class="${bOk ? 'cite-yes' : 'cite-no'}">${bOk ? '✅' : '❌'}</span></span>
+                      <span style="color:#aaa">→</span>
+                      <span>AFTER <span class="${aOk ? 'cite-yes' : 'cite-no'}">${aOk ? '✅' : '❌'}</span></span>
+                      ${imp ? '<span style="margin-left:auto;color:#166534;font-weight:700"> Impact!</span>' : ''}
+                    </div>
+                    ${failReason ? `<div style="margin-top:5px;font-size:.78em;color:#92400e;background:#fef3c7;padding:3px 7px;border-radius:4px">⚠️ ${escapeHtml(failReason)}</div>` : ''}
+                  </div>`;
+              });
+
+              const anyImpact = pc.any_impact;
+              const allAfter = pc.all_after_present;
+              citeHtml += `
+                <div style="margin-top:8px;padding:8px;border-radius:6px;text-align:center;
+                     background:${scorePct >= 70 ? '#dcfce7' : scorePct >= 40 ? '#fef3c7' : '#f3f4f6'};
+                     color:${scorePct >= 70 ? '#166534' : scorePct >= 40 ? '#92400e' : '#666'};font-weight:700;font-size:.9em">
+                  ${scorePct >= 70 ? ' System impact confirmed!' : scorePct >= 40 ? '⚡ Partial impact — system adapting' : '⚠️ Low impact — check article'}
+                </div>`;
+            } else if (hasPc) {
+              // Single model fallback
+              citeHtml += `
+                <div class="cite-row"><span class="cite-label">BEFORE</span>
+                  <span class="${beforePresent ? 'cite-yes' : 'cite-no'}">${beforePresent ? '✅ Present' : '❌ Missing'}</span>
+                </div>
+                <div class="cite-arrow">↓</div>
+                <div class="cite-row"><span class="cite-label">AFTER</span>
+                  <span class="${afterPresent ? 'cite-yes' : 'cite-no'}">${afterPresent ? '✅ Present' : '❌ Missing'}</span>
+                </div>
+                <div style="margin-top:8px;padding:8px;border-radius:6px;text-align:center;
+                     background:${impacted ? '#dcfce7' : '#f3f4f6'};
+                     color:${impacted ? '#166534' : '#666'};font-weight:700;font-size:.9em">
+                  ${impacted ? ' LLM visibility improved!' : '— No change detected'}
+                </div>`;
+            } else {
+              // No data at all
+              citeHtml =
+                '<p style="color:#999;font-size:.9em">Checking in progress...</p>';
+            }
+            document.getElementById('geoCitationPanel').innerHTML = citeHtml;
+
+            document.getElementById('geoPipelineCard').style.display = 'block';
+            showSuccess(`GEO Pipeline complete! Topic: "${d.topic}"`);
+
+            // Also show the article in the main Generated Content panel
+            document.getElementById('resultRaw').textContent =
+              d.raw_article || '';
+            document.getElementById('resultScore').textContent =
+              d.seo_score || '';
+
+            loadStats();
+          } else {
+            renderAgentLogs(data.logs || []);
+            showError(`Error: ${data.error}`);
+          }
+        } catch (err) {
+          showError(`Network error: ${err.message}`);
+        } finally {
+          btn.disabled = false;
+          loading.style.display = 'none';
+        }
+      }
+
+      function resetAgentLogs() {
+        const panel = document.getElementById('agentLogs');
+        const body = document.getElementById('agentLogsBody');
+        const count = document.getElementById('agentLogsCount');
+        panel.classList.add('active');
+        body.innerHTML = '';
+        count.textContent = '0 lines';
+      }
+
+      function renderAgentLogs(logs) {
+        const panel = document.getElementById('agentLogs');
+        const body = document.getElementById('agentLogsBody');
+        const count = document.getElementById('agentLogsCount');
+        const safeLogs = Array.isArray(logs) ? logs : [];
+
+        panel.classList.add('active');
+        body.innerHTML = safeLogs.length
+          ? safeLogs
+              .map(
+                (line) =>
+                  `<div class="agent-log-line">${escapeHtml(line)}</div>`,
+              )
+              .join('')
+          : '<div class="agent-log-line">No agent logs returned.</div>';
+        count.textContent = `${safeLogs.length} lines`;
+        body.scrollTop = body.scrollHeight;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
       }
 
       // ============ METRICS LOADING ============
@@ -849,7 +1500,7 @@
 
             let html = `
               <div class="result-item" style="margin-bottom: 20px;">
-                <h3>📊 Citation Summary</h3>
+                <h3> Citation Summary</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
                   <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
                     <strong>Total Articles Tracked:</strong> ${report.summary.total_tracked}
@@ -867,7 +1518,7 @@
               </div>
 
               <div class="result-item" style="margin-bottom: 20px;">
-                <h3>🤖 LLM Performance</h3>
+                <h3> LLM Performance</h3>
                 <div style="margin-top: 15px;">
             `;
 
@@ -955,7 +1606,7 @@
 
             let html = `
               <div class="result-item" style="margin-bottom: 20px;">
-                <h3>📊 Market Position</h3>
+                <h3> Market Position</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
                   <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
                     <strong>Your Articles:</strong> ${dashboard.competitor_overview.your_articles}
@@ -982,7 +1633,7 @@
               .forEach((gap) => {
                 html += `
                 <div style="margin-bottom: 12px; padding: 12px; background: #fff3cd; border-left: 4px solid #ff9800; border-radius: 4px;">
-                  <strong>📌 ${gap.topic}</strong><br>
+                  <strong> ${gap.topic}</strong><br>
                   <small>Competitors: ${gap.competitor_dominance.join(', ')}</small><br>
                   <small style="color: #666;">Action: ${gap.recommended_action}</small>
                 </div>
@@ -1001,7 +1652,7 @@
             gaps.low_hanging_fruit.forEach((fruit) => {
               html += `
                 <div style="margin-bottom: 12px; padding: 12px; background: #e8f5e9; border-left: 4px solid #4CAF50; border-radius: 4px;">
-                  <strong>🎯 ${fruit.topic}</strong><br>
+                  <strong> ${fruit.topic}</strong><br>
                   <small>${fruit.reason}</small>
                 </div>
               `;
@@ -1012,7 +1663,7 @@
               </div>
 
               <div class="result-item">
-                <h3>📋 30-Day Action Plan</h3>
+                <h3> 30-Day Action Plan</h3>
                 <ol style="margin-top: 15px; padding-left: 20px;">
             `;
 
@@ -1064,7 +1715,7 @@
               </div>
 
               <div class="result-item" style="margin-bottom: 20px;">
-                <h3>🤖 LLM Performance</h3>
+                <h3> LLM Performance</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px;">
                   <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; text-align: center;">
                     <strong>ChatGPT</strong><br>${d.llm_performance.chatgpt}
@@ -1079,7 +1730,7 @@
               </div>
 
               <div class="result-item">
-                <h3>📋 Next Actions</h3>
+                <h3> Next Actions</h3>
                 <ul style="margin-top: 15px; padding-left: 20px;">
             `;
 

@@ -28,7 +28,7 @@ class ResearchAgent:
         
         # PRIORITY 1: Scrape official website if configured
         if self.use_web_scraper and brand_key:
-            print(f"📥 Scraping official website for {brand}...")
+            print(f" Scraping official website for {brand}...")
             try:
                 brand_config = get_brand_config(brand_key)
                 if brand_config:
@@ -41,7 +41,7 @@ class ResearchAgent:
         
         # PRIORITY 2: Google Search API if website scraping unavailable/failed
         if self.use_web_search and brand and not (data_sources):
-            print(f"📡 Fetching real-time data via Google Search for {brand}...")
+            print(f" Fetching real-time data via Google Search for {brand}...")
             try:
                 web_research = self.web_agent.get_complete_research(
                     product_name=topic,

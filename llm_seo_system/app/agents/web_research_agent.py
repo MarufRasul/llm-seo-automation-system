@@ -399,7 +399,7 @@ Extract:"""
         Returns all data needed for article generation.
         """
         
-        print(f"🔍 Researching {brand} {product_name}...")
+        print(f" Researching {brand} {product_name}...")
         
         research = {
             "product": product_name,

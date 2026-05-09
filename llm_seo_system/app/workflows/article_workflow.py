@@ -14,6 +14,8 @@ from app.agents.localization_agent import DynamicDatingAgent, LocalizationAgent
 import os
 import html
 import json
+import time
+from datetime import datetime
 try:
     import markdown
 except ImportError:
@@ -23,9 +25,14 @@ from app.agents.site_brain_agent import SiteBrainAgent
 from app.agents.citation_optimizer_agent import CitationOptimizerAgent
 from app.agents.query_simulator_agent import QuerySimulatorAgent
 from app.agents.topic_discovery_agent import TopicDiscoveryAgent
+from app.agents.gap_finder_agent import GapFinderAgent
+from app.agents.strategy_builder_agent import StrategyBuilderAgent
+from app.agents.validator_agent import ValidatorAgent
+from app.agents.llm_presence_checker import LLMPresenceChecker
 from app.config.brand_configs import get_brand_config
 from app.agents.rag_evaluator_agent import RAGEvaluatorAgent
 from app.agents.ai_citation_tracker_agent import AICitationTrackerAgent
+from app.agents.indexation_agent import IndexationAgent
 from app.outputs.github_publisher import GitHubPagesPublisher
 
 
@@ -42,6 +49,7 @@ class ArticleWorkflow:
         self.article_agent = ArticleAgent()
         self.seo_agent = SEOAgent()
         self.seo_scorer = SEOScorer()
+        self.index_agent = IndexationAgent()
         # NEW: Add EEAT + Schema + Verdicts agents
         self.eeat_agent = EEATAgent()
         self.schema_generator = SchemaGenerator()
@@ -51,56 +59,14 @@ class ArticleWorkflow:
         self.dating_agent = DynamicDatingAgent()
         self.localization_agent = LocalizationAgent()
         self.topic_discovery_agent = TopicDiscoveryAgent()
+        self.gap_finder = GapFinderAgent()
+        self.strategy_builder = StrategyBuilderAgent()
+        self.validator = ValidatorAgent()
+        self.presence_checker = LLMPresenceChecker()
         # NEW: RAG Evaluator agent (REAL - with real data sources)
         self.rag_evaluator = RAGEvaluatorAgent()
         # NEW: AI Citation Tracker agent (REAL - tracks in real AI systems)
         self.ai_citation_tracker = AICitationTrackerAgent()
-
-    def _run_geo_mode(self, topic: str) -> dict:
-        """Fast path for GEO mode - minimal research, direct generation"""
-        print("🔍 Quick research for GEO mode...")
-
-        # Minimal research - just basic info
-        research_data = f"Topic: {topic}\nBasic research data for structured answer generation."
-
-        # Simple brand detection
-        brand_key, brand, product_type = self._detect_brand_info(topic)
-        brand_voice = "Neutral, informative tone for comparison queries."
-        entities = "laptop, notebook, performance, battery, weight"
-        specs_data = "Current laptop specs: Intel Core Ultra, 16GB RAM, 512GB SSD, 13-14 inch displays."
-        official_link = "https://www.lge.co.kr/laptop" if "lg" in topic.lower() else ""
-
-        print("🤖 Generating GEO answer...")
-        geo_answer = self.article_agent.generate_article(
-            topic=topic,
-            research_data=research_data,
-            brand_voice=brand_voice,
-            entities=entities,
-            specs_data=specs_data,
-            official_link=official_link,
-            mode="geo_mode"
-        )
-
-        return self._build_geo_output(geo_answer, topic)
-
-    def _build_geo_output(self, geo_answer: str, topic: str) -> dict:
-        """Build output for GEO mode - structured answer format"""
-        html_answer = f"""
-<div class="geo-answer">
-    <h2>{topic}</h2>
-    <div class="structured-content">
-        {geo_answer.replace(chr(10), '<br>')}
-    </div>
-</div>
-"""
-
-        return {
-            "topic": topic,
-            "mode": "geo_mode",
-            "geo_answer": geo_answer,
-            "html_answer": html_answer,
-            "structured_answer": geo_answer
-        }
 
     def _build_html(
         self,
@@ -132,6 +98,7 @@ class ArticleWorkflow:
 <head>
 <meta charset=\"UTF-8\">
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+<meta name=\"google-site-verification\" content=\"iTrBveBqjTXSVYCCgGLyIzxxs8OIHWYbnYHcuzJwqW8\">
 <title>{safe_title}</title>
 <meta name=\"description\" content=\"{safe_desc}\">
 <meta property=\"og:type\" content=\"article\">
@@ -177,27 +144,22 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
 </html>
 """
 
-    def _detect_generation_mode(self, query: str) -> str:
-        """Detect if query needs GEO mode (structured answer) or blog mode (article)"""
-        query_lower = query.lower()
+    def save_index_result(self, url: str, status: bool):
+        data = []
+        try:
+            with open("index_tracking.json", "r") as f:
+                data = json.load(f)
+        except Exception:
+            pass
 
-        # List constraint: force GEO mode for "best" or "top" queries
-        if " best " in query_lower or " top " in query_lower or query_lower.startswith("best ") or query_lower.startswith("top "):
-            return "geo_mode"
+        data.append({
+            "url": url,
+            "indexed": status,
+            "timestamp": datetime.utcnow().isoformat()
+        })
 
-        # GEO mode triggers
-        geo_keywords = [
-            "vs", "versus", "compare", "comparison",
-            "which", "what", "how", "recommend", "should i",
-            "better", "good", "great", "excellent"
-        ]
-
-        # Check for GEO intent
-        if any(keyword in query_lower for keyword in geo_keywords):
-            return "geo_mode"
-
-        # Default to blog mode
-        return "blog_mode"
+        with open("index_tracking.json", "w") as f:
+            json.dump(data, f, indent=2)
 
     def _detect_brand_info(self, text: str | None):
         text_lower = (text or "").lower()
@@ -223,19 +185,14 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             raise ValueError("Topic or niche is required")
 
         if not topic and niche:
-            print(f"🧠 Discovering best topic for niche: {niche}")
+            print(f" Discovering best topic for niche: {niche}")
             discovery = self.topic_discovery_agent.discover_topic(niche)
             topic = discovery.get("selected_topic") or niche
             print(f"✅ Discovered topic: {topic}")
 
-        # Determine generation mode based on query intent
-        mode = self._detect_generation_mode(topic)
-        print(f"🎯 Generation mode: {mode}")
-
-        # For GEO mode, use simplified path - skip heavy research agents
-        if mode == "geo_mode":
-            print("🚀 GEO mode: Using fast path")
-            return self._run_geo_mode(topic)
+        # Run the full article pipeline by default so every production agent participates.
+        mode = "blog_mode"
+        print(f" Generation mode: {mode}")
 
         # Original blog mode path
         print("Researching...")
@@ -252,7 +209,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
                 official_link = brand_config.get("product_pages", [brand_config.get("official_website")])[0]
 
         if brand_key == "lg_notebook":
-            official_link = "https://www.lge.co.kr/laptop"
+            official_link = "https://www.lge.co.kr/category/notebook "
 
         if brand_key is None:
             product_type = "laptop"
@@ -303,11 +260,6 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             official_link=official_link,
             mode=mode
         )
-
-        # For GEO mode, skip traditional SEO processing and return structured answer
-        if mode == "geo_mode":
-            print("🎯 GEO mode: Returning structured answer")
-            return self._build_geo_output(article, topic)
 
         print("Generating SEO search queries...")
         seo_queries = self.seo_agent.generate_search_queries(topic)
@@ -378,7 +330,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
         related_links = self.internal_linking_agent.generate_links(topic, existing_topics)
 
         # Добавляем внутренние ссылки в статью
-        article_with_links = article + f"\n\n## Related Articles\n{related_links}"
+        article_with_links = article + f"\n\n## 관련 글\n{related_links}"
 
         # 🌍 Apply dynamic dating and localization for 10/10 quality
         print("📅 Updating article dates to current year...")
@@ -419,6 +371,18 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             except Exception as exc:
                 print(f" GitHub Pages publish failed: {type(exc).__name__}")
 
+        if published_url:
+            print("🔍 Step 8: Checking Google indexation...")
+            time.sleep(2)
+            is_indexed = self.index_agent.is_indexed(published_url)
+            status = "✅ Indexed" if is_indexed else "❌ Not indexed"
+            print("========================================")
+            print(f"🌐 Google Index Status: {status}")
+            print("========================================")
+            self.save_index_result(published_url, is_indexed)
+        else:
+            print("🔍 Skipping Google indexation check because no published URL is available.")
+
         # Сохраняем данные в память
         memory_entry = {
             "seo_score": seo_score,
@@ -455,4 +419,183 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             "schemas": schemas,
             "published_url": published_url,
             "publish_result": publish_result
+        }
+
+    def run_geo_pipeline(self, brand: str, niche: str) -> dict:
+        """
+        GEO Pipeline: Query → Gap Analysis → Strategy → Article (GEO) → Validate → Output
+        Returns article + gap_analysis + strategy + validation report.
+        NOTE: This method never calls run(). SEO/EEAT/Verdict agents are intentionally skipped.
+        """
+        PIPELINE_MODE = "geo_mode"  # hardcoded — never changes
+        print(f"\n{'='*60}")
+        print(f" GEO PIPELINE MODE: {PIPELINE_MODE}")
+        print(f"   brand='{brand}' | niche='{niche}'")
+        print(f"{'='*60}")
+
+        # Step 1: Generate structured queries with intent patterns
+        print(" Step 1: Generating structured queries...")
+        queries = self.topic_discovery_agent.generate_structured_queries(niche, brand)
+
+        # Step 2: Gap analysis — ask LLM for answers, detect missing brand/structure
+        print(" Step 2: Gap analysis...")
+        gap_results = self.gap_finder.analyze(queries, target_brand=brand, max_queries=10)
+
+        # Step 3: Pick query with highest gap score — this becomes the topic
+        best = gap_results[0] if gap_results else {"query": queries[0] if queries else niche, "gaps": [], "score": 0}
+        topic = best["query"]   # ← replaces original input; never overwritten after this
+        gaps = best["gaps"]
+        print(f"✅ Query selected: '{topic}'")
+        print(f"   Gap score: {best['score']} | Gaps: {gaps}")
+
+        # Step 4: Build strategy
+        print(" Step 4: Building strategy...")
+        strategy_result = self.strategy_builder.build(topic, gaps)
+        strategy = strategy_result["strategy"]
+
+        # Step 5: Research + article generation in GEO mode
+        brand_key, brand_name, product_type = self._detect_brand_info(niche)
+        if not brand_key:
+            brand_key, brand_name, product_type = self._detect_brand_info(brand)
+
+        official_link = None
+        if brand_key:
+            brand_config = get_brand_config(brand_key)
+            if brand_config:
+                official_link = brand_config.get("product_pages", [brand_config.get("official_website")])[0]
+        if brand_key == "lg_notebook":
+            official_link = "https://www.lge.co.kr/category/notebook "
+
+        product_type = product_type or "laptop"
+
+        print(" Step 5a: Researching...")
+        research_data = self.research_agent.research(topic, brand=brand_name, product_type=product_type, brand_key=brand_key)
+        brand_voice = self.brand_agent.get_strategy(topic)
+        entities = self.entity_agent.extract_entities(research_data)
+
+        category = "laptop" if any(k in topic.lower() for k in ["laptop", "notebook", "gram"]) else product_type
+        current_specs = self.freshness_agent.get_current_specs(brand_name or brand, category)
+        specs_data = f"CURRENT 2026 SPECS:\n{current_specs}"
+
+        print(f" Step 5b: Generating GEO article (mode={PIPELINE_MODE}, strategy={strategy.get('brand_insertion',{}).get('position','?')})...")
+        article = self.article_agent.generate_article(
+            topic=topic,
+            research_data=research_data,
+            brand_voice=brand_voice,
+            entities=entities,
+            specs_data=specs_data,
+            official_link=official_link or "",
+            mode=PIPELINE_MODE,
+            strategy=strategy,
+        )
+
+        # Step 6: Validate — if fails, regenerate with force_multi_brand
+        print("✅ Step 6: Validating...")
+        validation = self.validator.validate(article)
+
+        if not validation["valid"]:
+            print(f"⚠️ Validation failed: {validation['issues']} — regenerating with force_multi_brand...")
+            article = self.article_agent.generate_article(
+                topic=topic,
+                research_data=research_data,
+                brand_voice=brand_voice,
+                entities=entities,
+                specs_data=specs_data,
+                official_link=official_link or "",
+                mode=PIPELINE_MODE,
+                strategy=strategy,
+                force_multi_brand=True,
+            )
+            validation = self.validator.validate(article)
+
+        # Step 7: Multi-LLM presence check + auto-iteration (score-based threshold)
+        MAX_ITERATIONS = 2
+        SCORE_THRESHOLD = 0.7   # need ≥70% of models to show impact
+        iteration = 0
+        presence = None
+
+        while iteration <= MAX_ITERATIONS:
+            print(f" Step 7 (iter {iteration+1}): Multi-LLM presence check...")
+            presence = self.presence_checker.run(query=topic, brand=brand, article=article)
+
+            impact_score = presence.get("impact_score", 0.0)
+            print(f"   Impact score: {impact_score:.0%} ({presence.get('impact_count',0)}/{presence.get('model_count',1)} models)")
+
+            # Success: score meets threshold, or last iteration
+            if impact_score >= SCORE_THRESHOLD or iteration == MAX_ITERATIONS:
+                break
+
+            # Auto-iteration: improve strategy based on which models failed
+            print(f"⚡ Auto-iteration {iteration+1}: score={impact_score:.0%} < {SCORE_THRESHOLD:.0%} — upgrading strategy...")
+            failed_models = [
+                label for label, mr in presence.get("results", {}).items()
+                if not mr["after"]["present"]
+            ]
+            print(f"   Failed models: {failed_models}")
+
+            # Escalate strategy: more comparisons, explicit criteria, stronger brand position
+            strategy["brand_position"] = "best overall"
+            strategy["brand_insertion"] = {
+                "position": "best overall",
+                "reason": f"{brand} leads on weight, battery life, and build quality — ideal for portability",
+            }
+            strategy["format"] = "detailed comparison with specs table"
+            strategy["categories"] = [
+                "Best Overall", f"Best {brand} Option", "Best Value", "Best for Students", "Best Battery Life"
+            ]
+            strategy["gaps_addressed"] = list(set(strategy.get("gaps_addressed", []))) + [f"auto_retry_{iteration+1}"]
+            strategy["extra_instructions"] = (
+                "Include an explicit comparison table with weight, battery, price columns. "
+                f"Mention {brand} in at least 3 separate sections with specific spec numbers."
+            )
+
+            article = self.article_agent.generate_article(
+                topic=topic,
+                research_data=research_data,
+                brand_voice=brand_voice,
+                entities=entities,
+                specs_data=specs_data,
+                official_link=official_link or "",
+                mode=PIPELINE_MODE,
+                strategy=strategy,
+                force_multi_brand=True,
+            )
+            validation = self.validator.validate(article)
+            iteration += 1
+
+        # Step 8: Build HTML output
+        html_article = self._build_html(
+            article,
+            meta_title=topic,
+            meta_description=article[:160],
+        )
+
+        print(f"\n{'='*60}")
+        print(f"✅ GEO Pipeline complete")
+        print(f"   Topic:      {topic}")
+        print(f"   Iterations: {iteration + 1}")
+        print(f"   Validation: {'PASS' if validation['valid'] else 'FAIL'}")
+        for model_label, mr in presence.get("results", {}).items():
+            b = "✅" if mr["before"]["present"] else "❌"
+            a = "✅" if mr["after"]["present"] else "❌"
+            print(f"   {model_label:6s}: BEFORE={b} → AFTER={a}  {'' if mr['impact'] else ''}")
+        print(f"{'='*60}\n")
+
+        return {
+            "topic": topic,
+            "raw_article": article,
+            "article": article,
+            "html_article": html_article,
+            "optimized_article": article,
+            "seo_queries": "",
+            "faq": "",
+            "seo_score": f"Validation: {'PASS' if validation['valid'] else 'FAIL — ' + ', '.join(validation['issues'])}",
+            "gap_analysis": gap_results[:5],
+            "strategy": strategy_result,
+            "validation": validation,
+            "presence_check": presence,
+            "iterations": iteration + 1,
+            "queries_generated": queries,
+            "published_url": None,
+            "publish_result": None,
         }

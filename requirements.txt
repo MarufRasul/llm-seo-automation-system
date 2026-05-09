@@ -10,3 +10,7 @@ requests
 markdown
 aiohttp
 faiss-cpu
+anthropic
+google-api-python-client
+google-auth
+google-auth-httplib2

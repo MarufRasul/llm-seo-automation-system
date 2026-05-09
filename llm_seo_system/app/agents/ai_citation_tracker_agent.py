@@ -58,6 +58,54 @@ class AICitationTrackerAgent:
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         with open(self.db_path, "w", encoding="utf-8") as f:
             json.dump(self.db, f, indent=2, ensure_ascii=False)
+
+    def get_citation_report(self) -> Dict[str, Any]:
+        """Возвращает текущий отчет по AI-цитированию и метрики."""
+        citations = self.db.get("citations", [])
+        total_tracked = len(citations)
+        total_citations = sum(1 for item in citations if item.get("citation_score", 0) > 0)
+        citation_rate = (total_citations / total_tracked * 100) if total_tracked else 0.0
+
+        return {
+            "citations": citations,
+            "summary": {
+                "total_tracked": total_tracked,
+                "total_citations": total_citations,
+                "citation_rate": round(citation_rate, 1),
+            }
+        }
+
+    def get_llm_comparison(self) -> Dict[str, Any]:
+        """Возвращает сравнительную статистику по LLM-источникам."""
+        citations = self.db.get("citations", [])
+        llm_stats = {
+            "perplexity": {"tracked": 0, "cited": 0, "citation_rate": 0.0},
+            "tavily": {"tracked": 0, "cited": 0, "citation_rate": 0.0},
+            "google": {"tracked": 0, "cited": 0, "citation_rate": 0.0}
+        }
+
+        for item in citations:
+            if "perplexity" in item:
+                llm_stats["perplexity"]["tracked"] += 1
+                if item["perplexity"].get("found"):
+                    llm_stats["perplexity"]["cited"] += 1
+            if "tavily" in item:
+                llm_stats["tavily"]["tracked"] += 1
+                if item["tavily"].get("mentions", 0) > 0:
+                    llm_stats["tavily"]["cited"] += 1
+            if "google" in item:
+                llm_stats["google"]["tracked"] += 1
+                if item["google"].get("position"):
+                    llm_stats["google"]["cited"] += 1
+
+        for name, stats in llm_stats.items():
+            tracked = stats["tracked"]
+            stats["citation_rate"] = round((stats["cited"] / tracked * 100) if tracked else 0.0, 1)
+
+        return {
+            "llms": llm_stats,
+            "total_articles": len(citations)
+        }
     
     async def track_with_perplexity(
         self,
@@ -74,7 +122,7 @@ class AICitationTrackerAgent:
             print("  ⚠️  PERPLEXITY_API_KEY не установлен")
             return {"found": False, "citations": []}
         
-        print(f"\n  🔍 Перплексити: {topic}")
+        print(f"\n   Перплексити: {topic}")
         
         url = "https://api.perplexity.ai/chat/completions"
         headers = {
@@ -137,7 +185,7 @@ class AICitationTrackerAgent:
             print("  ⚠️  TAVILY_API_KEY не установлен")
             return {"mentions": 0, "results": []}
         
-        print(f"\n  🔍 Tavily Search: '{topic}'")
+        print(f"\n   Tavily Search: '{topic}'")
         
         url = "https://api.tavily.com/search"
         headers = {
@@ -205,7 +253,7 @@ class AICitationTrackerAgent:
             print("  ⚠️  SERPAPI_KEY не установлен")
             return {"position": None, "rank": None}
         
-        print(f"\n  🔍 Google Search: '{topic}'")
+        print(f"\n   Google Search: '{topic}'")
         
         import requests
         
@@ -256,7 +304,7 @@ class AICitationTrackerAgent:
         ПОЛНЫЙ РЕАЛЬНЫЙ МОНИТОРИНГ через все каналы одновременно
         """
         print(f"\n{'='*70}")
-        print(f"📊 REAL Citation Tracking")
+        print(f" REAL Citation Tracking")
         print(f"{'='*70}")
         print(f"  Title: {article_title}")
         print(f"  URL: {article_url}")

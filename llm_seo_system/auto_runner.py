@@ -89,7 +89,7 @@ def main():
         import json
         json.dump({"mode": mode, "results": results}, f, ensure_ascii=False, indent=2)
 
-    print(f"\n📦 Автоматический запуск завершен. Отчет: {report_path}")
+    print(f"\n Автоматический запуск завершен. Отчет: {report_path}")
 
 
 if __name__ == "__main__":

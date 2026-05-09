@@ -160,7 +160,7 @@ Question: {query}"""
             print("    SERPAPI_KEY не установлен")
             return []
         
-        print(f"  🔍 Поиск URL через Google...")
+        print(f"   Поиск URL через Google...")
         search = GoogleSearchAPIWrapper(serpapi_api_key=serpapi_key)
         results = search.results(query, num_results=3)
         

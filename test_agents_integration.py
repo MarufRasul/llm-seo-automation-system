@@ -20,9 +20,9 @@ from app.agents.ai_citation_tracker_agent import AICitationTrackerAgent
 def test_rag_evaluator():
     """Тест 1: RAGEvaluatorAgent - работает с документами и LLM"""
     print("\n" + "="*70)
-    print("🔍 ТЕСТ 1: RAGEvaluatorAgent")
+    print(" ТЕСТ 1: RAGEvaluatorAgent")
     print("="*70)
-    print("\n📝 Что делает RAGEvaluatorAgent:")
+    print("\n Что делает RAGEvaluatorAgent:")
     print("  1. Создает базу данных документов (FAISS)")
     print("  2. Конвертирует запрос в вектора (embeddings)")
     print("  3. Ищет похожие документы в базе")
@@ -34,7 +34,7 @@ def test_rag_evaluator():
         
         # Тестовый запрос
         query = "best lightweight laptop for students"
-        print(f"\n📌 Запрос: '{query}'")
+        print(f"\n Запрос: '{query}'")
         
         result = agent.evaluate(query)
         
@@ -57,9 +57,9 @@ def test_rag_evaluator():
 async def test_ai_citation_tracker():
     """Тест 2: AICitationTrackerAgent - отслеживает цитирование в AI"""
     print("\n" + "="*70)
-    print("📊 ТЕСТ 2: AICitationTrackerAgent")
+    print(" ТЕСТ 2: AICitationTrackerAgent")
     print("="*70)
-    print("\n📝 Что делает AICitationTrackerAgent:")
+    print("\n Что делает AICitationTrackerAgent:")
     print("  1. Проверяет Perplexity API, если ключ есть")
     print("  2. Проверяет AI-oriented web visibility через Tavily")
     print("  3. Проверяет позицию в Google через SerpAPI")
@@ -79,7 +79,7 @@ async def test_ai_citation_tracker():
         topic = "lightweight laptop"
         url = "https://example.com/lg-gram"
         
-        print(f"\n📌 Отслеживаем:")
+        print(f"\n Отслеживаем:")
         print(f"  Title: {title}")
         print(f"  Topic: {topic}")
         print(f"  URL: {url}")
@@ -141,7 +141,7 @@ async def main():
     """Главная функция с всеми тестами"""
     print("\n")
     print("╔══════════════════════════════════════════════════════════════════╗")
-    print("║  🚀 Тестирование RAGEvaluatorAgent & AICitationTrackerAgent    ║")
+    print("║   Тестирование RAGEvaluatorAgent & AICitationTrackerAgent    ║")
     print("╚══════════════════════════════════════════════════════════════════╝")
     
     results = {}
@@ -157,7 +157,7 @@ async def main():
     
     # Итоги
     print("\n" + "="*70)
-    print("📊 ИТОГОВЫЙ ОТЧЕТ")
+    print(" ИТОГОВЫЙ ОТЧЕТ")
     print("="*70)
     
     for test_name, passed in results.items():

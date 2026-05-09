@@ -111,7 +111,7 @@ Generate verdicts that are SHORT, SPECIFIC, and CITABLE:"""
         Generate verdicts for specific use cases.
         Example: "For students?" "For professionals?" "For athletes?"
         """
-        print(f"📌 VerdictGenerator: generating use case verdicts for '{product}'")
+        print(f" VerdictGenerator: generating use case verdicts for '{product}'")
         
         use_cases_text = "\n".join([f"- {uc}" for uc in use_cases])
         
@@ -169,7 +169,7 @@ Generate verdicts:"""
         Generate specific comparison verdict between two products.
         Used for competitive positioning.
         """
-        print(f"📊 VerdictGenerator: generating comparison verdict for '{product}' vs '{competitor}'")
+        print(f" VerdictGenerator: generating comparison verdict for '{product}' vs '{competitor}'")
         
         prompt = PromptTemplate(
             input_variables=["product", "competitor", "difference", "metric"],
@@ -231,7 +231,7 @@ Now generate the verdict:"""
         """
         Generate complete "Verdicts for AI" markdown section.
         """
-        print(f"📌 VerdictGenerator: generating complete verdict section for '{product}'")
+        print(f" VerdictGenerator: generating complete verdict section for '{product}'")
         
         # Get model-specific verdicts
         model_verdicts = self.generate_ai_verdicts(

@@ -26,7 +26,7 @@ class DataFreshnessAgent:
         """
         Get 2026-current specifications for product
         """
-        print(f"📊 DataFreshnessAgent: fetching current specs for '{product}' category '{category}'")
+        print(f" DataFreshnessAgent: fetching current specs for '{product}' category '{category}'")
         
         # Args:
         #     product: Product name (e.g., "LG Gram")
@@ -123,7 +123,7 @@ Return as JSON:
         """
         Extract Named Entities from article
         """
-        print(f"🔍 DataFreshnessAgent: extracting named entities for '{product_name}'")
+        print(f" DataFreshnessAgent: extracting named entities for '{product_name}'")
         
         # Focus on: SKUs, model numbers, specific configurations
         

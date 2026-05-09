@@ -178,7 +178,7 @@ class CompetitorIntelligenceAgent:
         """
         Get content gap report for a brand.
         """
-        print(f"📊 CompetitorIntelligenceAgent: generating content gap report for {brand}")
+        print(f" CompetitorIntelligenceAgent: generating content gap report for {brand}")
 
         report = {
             "brand": brand,
@@ -240,7 +240,7 @@ class CompetitorIntelligenceAgent:
         """
         Find specific gaps where competitors are strong but you're weak.
         """
-        print(f"🔍 CompetitorIntelligenceAgent: finding gaps for {brand}")
+        print(f" CompetitorIntelligenceAgent: finding gaps for {brand}")
 
         gaps = {
             "brand": brand,
@@ -295,7 +295,7 @@ class CompetitorIntelligenceAgent:
         """
         Get comprehensive competitor intelligence dashboard.
         """
-        print(f"📊 CompetitorIntelligenceAgent: generating dashboard for {brand}")
+        print(f" CompetitorIntelligenceAgent: generating dashboard for {brand}")
 
         dashboard = {
             "brand": brand,
@@ -363,13 +363,13 @@ if __name__ == "__main__":
         topic="lightweight laptop for students"
     )
 
-    print("\n📋 Competitor Scan Result:")
+    print("\n Competitor Scan Result:")
     print(json.dumps(scan, indent=2, ensure_ascii=False))
 
-    print("\n📊 Content Gap Report:")
+    print("\n Content Gap Report:")
     gap_report = intel.get_content_gap_report("LG Gram")
     print(json.dumps(gap_report, indent=2, ensure_ascii=False))
 
-    print("\n🎯 Competitor Dashboard:")
+    print("\n Competitor Dashboard:")
     dashboard = intel.get_competitor_dashboard("LG Gram")
     print(json.dumps(dashboard, indent=2, ensure_ascii=False))

@@ -20,7 +20,7 @@ class QuerySimulatorAgent:
             return []
         
         try:
-            print(f"🔍 Fetching REAL questions from Google 'People Also Ask' for '{topic}'...")
+            print(f" Fetching REAL questions from Google 'People Also Ask' for '{topic}'...")
             response = requests.get(
                 self.base_url,
                 params={
@@ -145,7 +145,7 @@ class QuerySimulatorAgent:
         3. YouTube - creator-curated questions
         4. GPT simulation - fallback if no real data
         """
-        print(f"\n🎯 QuerySimulatorAgent: Collecting REAL user questions for '{topic}'")
+        print(f"\n QuerySimulatorAgent: Collecting REAL user questions for '{topic}'")
         all_queries = []
         
         # Priority 1: Real Google data
@@ -162,7 +162,7 @@ class QuerySimulatorAgent:
         
         # Fallback: Simulate if we don't have enough real data
         if len(all_queries) < 5:
-            print(f"📊 Not enough real data, generating simulated questions...")
+            print(f" Not enough real data, generating simulated questions...")
             simulated = self._simulate_queries(topic)
             all_queries.extend(simulated)
         

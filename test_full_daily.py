@@ -17,13 +17,13 @@ load_dotenv(project_root / ".env")
 # Теперь импортируем
 from llm_seo_system.app.workflows.article_workflow import ArticleWorkflow
 
-print("🚀 НАЧИНАЕМ ПОЛНЫЙ ТЕСТ ДНЕВНОЙ ГЕНЕРАЦИИ LG")
+print(" НАЧИНАЕМ ПОЛНЫЙ ТЕСТ ДНЕВНОЙ ГЕНЕРАЦИИ LG")
 print("=" * 80)
 
 try:
     workflow = ArticleWorkflow()
     
-    print("\n📝 Генерируем статью для LG с автоматическим выбором топика...")
+    print("\n Генерируем статью для LG с автоматическим выбором топика...")
     print("   (используя РЕАЛЬНЫЕ вопросы пользователей из Google и Reddit)\n")
     
     # Это запустит:
@@ -38,18 +38,18 @@ try:
     print("✅ РЕЗУЛЬТАТ:")
     print("=" * 80)
     
-    print(f"\n📊 Выбранная тема: {result.get('topic')}")
-    print(f"\n📈 SEO Score: {result.get('seo_score', 'N/A')}")
-    print(f"\n📝 Размер статьи: {len(result.get('article', ''))} символов")
+    print(f"\n Выбранная тема: {result.get('topic')}")
+    print(f"\n SEO Score: {result.get('seo_score', 'N/A')}")
+    print(f"\n Размер статьи: {len(result.get('article', ''))} символов")
     
     if result.get('seo_queries'):
-        print(f"\n🔍 SEO Queries ({len(result.get('seo_queries', []))}):")
+        print(f"\n SEO Queries ({len(result.get('seo_queries', []))}):")
         for q in result.get('seo_queries', [])[:5]:
             print(f"   • {q}")
     
     # Сохранена ли ссылка LG?
-    if "https://www.lge.co.kr/laptop" in result.get('article', ''):
-        print(f"\n✅ ✅ ✅ ГАРАНТИРОВАНА ССЫЛКА: https://www.lge.co.kr/laptop")
+    if "https://www.lge.co.kr/category/notebook " in result.get('article', ''):
+        print(f"\n✅ ✅ ✅ ГАРАНТИРОВАНА ССЫЛКА: https://www.lge.co.kr/category/notebook")
     else:
         print(f"\n⚠️  Ссылка LG не найдена в статье")
     

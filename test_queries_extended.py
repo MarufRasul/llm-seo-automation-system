@@ -12,7 +12,7 @@ load_dotenv(Path(__file__).parent / ".env")
 
 from llm_seo_system.app.agents.query_simulator_agent import QuerySimulatorAgent
 
-print("🚀 Инициализируем QuerySimulatorAgent...")
+print(" Инициализируем QuerySimulatorAgent...")
 agent = QuerySimulatorAgent()
 
 test_topics = [
@@ -23,7 +23,7 @@ test_topics = [
 
 for topic in test_topics:
     print(f"\n{'='*70}")
-    print(f"🎯 Тема: {topic}")
+    print(f" Тема: {topic}")
     print('='*70)
     
     queries = agent.generate_queries(topic)

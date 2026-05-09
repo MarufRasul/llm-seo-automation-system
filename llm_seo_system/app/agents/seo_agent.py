@@ -14,7 +14,7 @@ class SEOAgent:
 
     # 🔹 SEO анализ темы
     def analyze_topic(self, topic: str):
-        print(f"🔍 SEOAgent: analyzing topic '{topic}'")
+        print(f" SEOAgent: analyzing topic '{topic}'")
         prompt = f"""
 You are an advanced SEO strategist.
 

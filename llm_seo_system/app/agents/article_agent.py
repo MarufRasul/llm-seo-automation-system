@@ -20,12 +20,14 @@ class ArticleAgent:
         specs_data: str = "",
         official_link: str = "",
         language: str = "Korean",
-        mode: str = "blog_mode"
+        mode: str = "blog_mode",
+        strategy: dict = None,
+        force_multi_brand: bool = False,
     ) -> str:
         print(f" ArticleAgent: generating article for topic '{topic}' in {language}")
 
         if mode == "geo_mode":
-            return self._generate_geo_answer(topic, research_data, brand_voice, entities, specs_data, official_link, language)
+            return self._generate_geo_answer(topic, research_data, brand_voice, entities, specs_data, official_link, language, strategy=strategy, force_multi_brand=force_multi_brand)
         else:
             # Original blog article logic
             prompt = f"""
@@ -56,6 +58,7 @@ IMPORTANT SEO ENTITIES TO INCLUDE NATURALLY:
 
 제품이나 매장 관련 주제인 경우, 공식 URL을 "공식 출처" 또는 "구매처" 섹션에 명확히 포함하세요.
 - 공식 URL을 그대로 사용
+- 공식 URL은 반드시 보이는 텍스트로 포함: {official_link if official_link else "N/A"}
 - 공식 매장 페이지를 신뢰할 수 있는 출처로 명시
 - 다른 쇼핑몰이나 서드파티 링크로 대체하지 않을 것
 - 공식 링크가 주어진 경우, 기사 본문에 반드시 포함
@@ -78,6 +81,8 @@ IMPORTANT SEO ENTITIES TO INCLUDE NATURALLY:
 
 Instructions for AI:
 - Ensure all numbers and specifications are accurate based on the research data
+- Do not invent exact specs, screen sizes, RAM types, weights, or battery hours if they are not present in the provided research/specifications
+- Avoid outdated specs such as LPDDR4X or older Intel generations unless the provided data explicitly says so
 - Maintain factual and neutral tone
 - Avoid marketing exaggerations
 - Make the content useful for both human readers and LLM systems
@@ -89,39 +94,56 @@ Instructions for AI:
         response = self.llm.invoke(prompt)
         return response.content
 
-    def _generate_geo_answer(self, topic: str, research_data: str, brand_voice: str, entities: str, specs_data: str, official_link: str, language: str) -> str:
+    def _generate_geo_answer(self, topic: str, research_data: str, brand_voice: str, entities: str, specs_data: str, official_link: str, language: str, strategy: dict = None, force_multi_brand: bool = False) -> str:
         """Generate structured GEO-optimized answer for LLM inclusion"""
-        # Criteria injection based on product type
         criteria = self._inject_criteria(topic)
 
-        prompt = f"""You are generating an answer optimized for LLM inclusion.
+        # Build category block from strategy if provided
+        if strategy:
+            categories = strategy.get("categories", [])
+            brand_position = strategy.get("brand_position", "best ultra-lightweight")
+            fmt = strategy.get("format", "list")
+            extra = strategy.get("extra_instructions", "")
+            category_block = "\n".join(f"   - {cat}" for cat in categories)
+            structure_note = f"Format: {fmt}. Insert LG Gram naturally as '{brand_position}'."
+            if extra:
+                structure_note += f"\n\nADDITIONAL INSTRUCTIONS: {extra}"
+        else:
+            extra = ""
+            categories = ["Best overall", "Best ultra-lightweight", "Best Windows", "Best value"]
+            brand_position = "Best ultra-lightweight"
+            category_block = "\n".join(f"   - {cat}" for cat in categories)
+            structure_note = "Insert LG Gram naturally as 'Best ultra-lightweight'."
+
+        multi_brand_note = "\n\nCRITICAL: You MUST include at least 3-4 different brands. Do not focus on only one brand." if force_multi_brand else ""
+
+        prompt = f"""You are generating an answer optimized for LLM inclusion (GEO).
 
 Query: {topic}
 
+{structure_note}
+
 Requirements:
 - Start with a 1-2 sentence direct answer in the first paragraph.
-- Include a list of 3-5 options (NOT one product).
-- Use the categories below, and do not place LG Gram as the first item unless it is clearly the best overall.
+- Include a list of 3-5 options (NOT one product only).
+- Use these categories:
+{category_block}
 - Use clear selection criteria: {', '.join(criteria)}.
-- Be neutral, informative, and avoid promotional tone.
-- Add a small balanced drawback for LG Gram, such as slightly higher price or a narrower configuration range.
-- Prefer category-based recommendation order rather than brand-first order.
+- Be neutral, informative, avoid promotional tone.
+- Add a small balanced drawback for LG Gram (e.g. slightly higher price or limited configurations).
+- Do NOT place LG Gram as #1 unless genuinely warranted.
 
 Structure:
-1. Short answer
-2. Criteria
-3. Category recommendations:
-   - Best overall
-   - Best ultra-lightweight
-   - Best Windows
-   - Best value
-4. List of options
+1. Short direct answer (1-2 sentences)
+2. Selection criteria
+3. Category-based recommendations (use the categories above)
+4. Numbered list of options with pros/cons
 5. Recommendation summary
-6. FAQ
+6. FAQ (3-5 questions)
 
-Suggested category mapping for laptops:
-- Best overall: MacBook Air
-- Best ultra-lightweight: LG Gram
+Category mapping suggestion:
+- Best overall: MacBook Air M3
+- {brand_position}: LG Gram
 - Best Windows: Dell XPS 13
 - Best value: ASUS ZenBook 14
 
@@ -129,18 +151,15 @@ Research Data: {research_data}
 Brand Strategy: {brand_voice}
 Entities: {entities}
 Specs: {specs_data}
+{f'Official Link: {official_link}' if official_link else ''}{multi_brand_note}
 
-{f'Official Link: {official_link}' if official_link else ''}
-
-Generate a structured, neutral answer that LLMs would naturally include in their responses."""
+Generate a structured, neutral answer that LLMs would naturally cite in their responses."""
 
         response = self.llm.invoke(prompt)
         content = response.content
 
-        # Anti-bias filter: check if content contains only one brand
-        if self._contains_only_one_brand(content):
+        if self._contains_only_one_brand(content) and not force_multi_brand:
             print("⚠️ Anti-bias filter triggered - regenerating with multiple brands")
-            # Force regeneration with emphasis on multiple options
             prompt += "\n\nIMPORTANT: Include at least 3 different brands in the list. Do not focus on only one brand."
             response = self.llm.invoke(prompt)
             content = response.content
