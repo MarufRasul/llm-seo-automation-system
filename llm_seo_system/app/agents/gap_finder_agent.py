@@ -1,11 +1,13 @@
 import os
 import re
-from typing import Any, Dict, List, cast
+from typing import Any, Dict, List
 
 try:
     from serpapi import GoogleSearch
 except ImportError:
     GoogleSearch = None  # type: ignore
+
+from app.agents.presence_measurement import compute_serp_metrics
 
 
 class GapFinderAgent:
@@ -60,7 +62,10 @@ class GapFinderAgent:
         results = []
         for query in queries[:max_queries]:
             serp_bundle = self._fetch_serp_bundle(query)
+            organic = serp_bundle.get("organic_results") or []
+            serp_metrics = compute_serp_metrics(organic, target_brand)
             analysis = self._build_analysis(serp_bundle, target_brand)
+            analysis["serp_metrics"] = serp_metrics
             gaps = self._detect_gaps_from_analysis(analysis)
             score = self._calculate_score(gaps, query=query)
             results.append(
@@ -69,6 +74,8 @@ class GapFinderAgent:
                     "analysis": analysis,
                     "gaps": gaps,
                     "score": score,
+                    "organic_results": organic,
+                    "serp_metrics": serp_metrics,
                 },
             )
             serp_note = (

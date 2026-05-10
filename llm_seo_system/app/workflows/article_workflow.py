@@ -34,6 +34,7 @@ from app.agents.rag_evaluator_agent import RAGEvaluatorAgent
 from app.agents.ai_citation_tracker_agent import AICitationTrackerAgent
 from app.agents.indexation_agent import IndexationAgent
 from app.outputs.github_publisher import GitHubPagesPublisher
+from app.agents.presence_measurement import build_measurement_report
 
 
 class ArticleWorkflow:
@@ -448,6 +449,23 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
         print(f"✅ Query selected: '{topic}'")
         print(f"   Gap score: {best['score']} | Gaps: {gaps}")
 
+        measurement_report: dict = {}
+        try:
+            organic_for_measure = best.get("organic_results") or []
+            measurement_report = build_measurement_report(topic, brand, organic_for_measure)
+            serp_m = measurement_report.get("serp") or {}
+            lb = measurement_report.get("llm_baseline") or {}
+            lc = measurement_report.get("llm_with_external_context") or {}
+            print(
+                f" Step 3b: Measurement — SERP coverage={serp_m.get('coverage')} "
+                f"first_rank={serp_m.get('first_rank')} "
+                f"baseline_mr={lb.get('mention_rate')} context_mr={lc.get('mention_rate')} "
+                f"Δ={measurement_report.get('delta_mention_rate')}",
+            )
+        except Exception as exc:
+            measurement_report = {"error": str(exc)}
+            print(f"⚠️ Measurement report failed: {exc}")
+
         # Step 4: Build strategy
         print(" Step 4: Building strategy...")
         strategy_result = self.strategy_builder.build(topic, gaps)
@@ -591,6 +609,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             "faq": "",
             "seo_score": f"Validation: {'PASS' if validation['valid'] else 'FAIL — ' + ', '.join(validation['issues'])}",
             "gap_analysis": gap_results[:5],
+            "measurement_report": measurement_report,
             "strategy": strategy_result,
             "validation": validation,
             "presence_check": presence,

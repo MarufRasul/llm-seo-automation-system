@@ -758,6 +758,7 @@ def geo_pipeline():
             "seo_score": result["seo_score"],
             "file_path": article_path,
             "gap_analysis": result.get("gap_analysis", []),
+            "measurement_report": result.get("measurement_report", {}),
             "strategy": result.get("strategy", {}),
             "validation": result.get("validation", {}),
             "presence_check": result.get("presence_check", {}),
