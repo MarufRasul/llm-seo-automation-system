@@ -283,6 +283,7 @@ def build_measurement_report(
             "serp": serp,
             "llm_baseline": {"by_model": {}, "mention_rate": None, "skipped": True},
             "llm_with_external_context": {"by_model": {}, "mention_rate": None, "skipped": True},
+            "model_results": {},
             "delta_mention_rate": None,
             "external_context_preview": "",
             "note": "GEO_SKIP_LLM_EVAL set — LLM evaluators skipped",
@@ -304,6 +305,8 @@ def build_measurement_report(
             "mention_rate": round(ctx_score, 4),
             "n_models": len(ctx_models),
         },
+        # Alias for dashboards / confidence (evaluator agreement on context answers)
+        "model_results": ctx_models,
         "delta_mention_rate": round(ctx_score - base_score, 4)
         if base_models and ctx_models
         else None,

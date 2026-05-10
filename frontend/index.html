@@ -567,6 +567,60 @@
         color: #667eea;
       }
 
+      .rank-table-wrap {
+        overflow-x: auto;
+        margin-top: 4px;
+      }
+      .rank-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.86em;
+      }
+      .rank-table th,
+      .rank-table td {
+        padding: 8px 10px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .rank-table th {
+        background: #f3f4f6;
+        color: #374151;
+        font-weight: 700;
+      }
+      .decision-priority {
+        color: #c2410c;
+        font-weight: 700;
+      }
+      .decision-good {
+        color: #166534;
+        font-weight: 600;
+      }
+      .decision-low {
+        color: #6b7280;
+      }
+
+      .benchmark-plots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+      }
+      .benchmark-plots figure {
+        margin: 0;
+      }
+      .benchmark-plots img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        background: #fafafa;
+      }
+      .benchmark-plots figcaption {
+        font-size: 0.78em;
+        color: #6b7280;
+        margin-top: 6px;
+      }
+
       /* Dashboard styles */
       .tab-btn {
         background: none;
@@ -808,6 +862,222 @@
           >
             Refresh Metrics
           </button>
+        </div>
+
+        <!-- Topic opportunity ranker -->
+        <div class="card" id="topicRankCard">
+          <h2><span class="icon"></span> Topic opportunity ranker</h2>
+          <p style="font-size: 0.88em; color: #555; margin-bottom: 12px">
+            Queries → SERP + Δ + impact → ranked topics (uses Target Brand and Niche
+            above). Faster without LLM measurement (clears Δ term).
+          </p>
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 12px;
+              align-items: center;
+              margin-bottom: 12px;
+            "
+          >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.88em;
+              "
+            >
+              <input type="checkbox" id="rankIncludeMeasurement" checked />
+              LLM measurement (Δ)
+            </label>
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.88em;
+              "
+            >
+              <input type="checkbox" id="rankUseGapImpact" checked />
+              Gap score as impact
+            </label>
+            <label style="font-size: 0.88em"
+              >Top
+              <input
+                type="number"
+                id="rankTopN"
+                value="10"
+                min="1"
+                max="50"
+                style="width: 52px"
+              />
+              rows</label
+            >
+            <label style="font-size: 0.88em"
+              >Max queries
+              <input
+                type="number"
+                id="rankMaxQueries"
+                value="10"
+                min="1"
+                max="30"
+                style="width: 52px"
+              /></label
+            >
+          </div>
+          <button
+            type="button"
+            id="rankTopicsBtn"
+            onclick="runTopicRanking()"
+            style="margin-bottom: 12px"
+          >
+            Rank topics
+          </button>
+          <div
+            id="rankTopicsLoading"
+            class="loading"
+            style="display: none; padding: 12px; text-align: center"
+          >
+            <div class="spinner"></div>
+            <p style="margin-top: 8px">Ranking topics…</p>
+          </div>
+          <div class="error" id="rankTopicsError" style="display: none"></div>
+          <div id="rankTopicsTableWrap" style="display: none">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 8px;
+              "
+            >
+              <span id="rankTopicsMeta" style="font-size: 0.85em; color: #666"></span>
+              <button type="button" onclick="downloadRankCsv()" id="rankCsvBtn">
+                Export CSV (full run)
+              </button>
+            </div>
+            <div class="rank-table-wrap">
+              <table class="rank-table" id="rankTopicsTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Query</th>
+                    <th>Score</th>
+                    <th>Decision</th>
+                    <th>Δ</th>
+                    <th>Coverage</th>
+                    <th>Gap</th>
+                    <th>Impact</th>
+                  </tr>
+                </thead>
+                <tbody id="rankTopicsTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- GEO research benchmark -->
+        <div class="card" id="geoBenchmarkCard">
+          <h2><span class="icon"></span> GEO research benchmark</h2>
+          <p style="font-size: 0.88em; color: #555; margin-bottom: 12px">
+            20–50 fixed queries → SERP + Δ + confidence → <strong>final_score_v2</strong> +
+            opportunity maps (PNG via API). Uses <strong>Target Brand</strong> above; optional
+            query list (one per line).
+          </p>
+          <div class="form-group" style="margin-bottom: 10px">
+            <label for="benchmarkQueries">Queries (optional, one per line)</label>
+            <textarea
+              id="benchmarkQueries"
+              rows="4"
+              placeholder="Leave empty to use the built-in ~20 laptop benchmark set."
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                font-family: inherit;
+                font-size: 0.88em;
+              "
+            ></textarea>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 12px;
+              align-items: center;
+              margin-bottom: 12px;
+            "
+          >
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.88em">
+              <input type="checkbox" id="benchIncludeMeasurement" checked />
+              LLM measurement (Δ)
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.88em">
+              <input type="checkbox" id="benchGapImpact" checked />
+              Gap as impact
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.88em">
+              <input type="checkbox" id="benchAdaptive" checked />
+              Adaptive weights
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.88em">
+              <input type="checkbox" id="benchSavePlots" checked />
+              Save PNG plots
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.88em">
+              <input type="checkbox" id="benchPersistJson" checked />
+              Save benchmark_results.json
+            </label>
+          </div>
+          <button type="button" id="benchmarkBtn" onclick="runGeoBenchmark()" style="margin-bottom: 12px">
+            Run benchmark
+          </button>
+          <div
+            id="benchmarkLoading"
+            class="loading"
+            style="display: none; padding: 16px; text-align: center"
+          >
+            <div class="spinner"></div>
+            <p style="margin-top: 8px">Running benchmark (may take several minutes)…</p>
+          </div>
+          <div class="error" id="benchmarkError" style="display: none"></div>
+          <div id="benchmarkSummary" style="display: none; margin-bottom: 12px"></div>
+          <div id="benchmarkPlotsWrap" style="display: none" class="benchmark-plots"></div>
+          <div id="benchmarkTableWrap" style="display: none">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 8px;
+              "
+            >
+              <span id="benchmarkMeta" style="font-size: 0.85em; color: #666"></span>
+              <button type="button" onclick="downloadBenchmarkCsv()">Export CSV</button>
+            </div>
+            <div class="rank-table-wrap">
+              <table class="rank-table" id="benchmarkTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Query</th>
+                    <th>Score v2</th>
+                    <th>Decision</th>
+                    <th>Conf.</th>
+                    <th>Δ</th>
+                    <th>Coverage</th>
+                  </tr>
+                </thead>
+                <tbody id="benchmarkTbody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1503,6 +1773,264 @@
           btn.disabled = false;
           loading.style.display = 'none';
         }
+      }
+
+      let lastRankCsv = '';
+
+      async function runTopicRanking() {
+        const brand = document.getElementById('geoBrand').value.trim();
+        const niche = document.getElementById('geoNiche').value.trim();
+        const errEl = document.getElementById('rankTopicsError');
+        if (!brand && !niche) {
+          errEl.textContent =
+            'Please enter a target brand or niche in the fields above.';
+          errEl.style.display = 'block';
+          return;
+        }
+        errEl.style.display = 'none';
+        hideError();
+        const btn = document.getElementById('rankTopicsBtn');
+        const loading = document.getElementById('rankTopicsLoading');
+        const wrap = document.getElementById('rankTopicsTableWrap');
+        lastRankCsv = '';
+        btn.disabled = true;
+        loading.style.display = 'block';
+        wrap.style.display = 'none';
+
+        if (!ensureApiBase()) {
+          btn.disabled = false;
+          loading.style.display = 'none';
+          return;
+        }
+
+        try {
+          const topN = Math.min(
+            50,
+            Math.max(1, parseInt(document.getElementById('rankTopN').value, 10) || 10),
+          );
+          const maxQ = Math.min(
+            30,
+            Math.max(1, parseInt(document.getElementById('rankMaxQueries').value, 10) || 10),
+          );
+          const response = await fetch(`${API_BASE}/geo/rank-topics`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              brand,
+              niche,
+              max_queries: maxQ,
+              include_measurement: document.getElementById('rankIncludeMeasurement')
+                .checked,
+              use_gap_as_impact: document.getElementById('rankUseGapImpact')
+                .checked,
+              top_n: topN,
+            }),
+          });
+          const data = await readResponseJson(response);
+          if (data.success) {
+            const d = data.data;
+            lastRankCsv = d.csv || '';
+            const rows = d.ranked_topics || [];
+            document.getElementById('rankTopicsMeta').textContent =
+              `${d.gap_queries_analyzed || 0} queries analyzed — showing top ${rows.length} of ${d.ranked_topics_total || rows.length}`;
+            const tbody = document.getElementById('rankTopicsTbody');
+            tbody.innerHTML = rows
+              .map((r, i) => {
+                const dec = r.decision || '';
+                let decClass = 'decision-low';
+                if (dec === 'PRIORITY') decClass = 'decision-priority';
+                else if (dec === 'GOOD') decClass = 'decision-good';
+                const delta = r.delta == null ? '—' : String(r.delta);
+                const cov = r.coverage == null ? '—' : String(r.coverage);
+                return `<tr>
+                  <td>${i + 1}</td>
+                  <td>${escapeHtml(r.query || '')}</td>
+                  <td><strong>${escapeHtml(String(r.final_score ?? ''))}</strong></td>
+                  <td><span class="${decClass}">${escapeHtml(dec)}</span></td>
+                  <td>${escapeHtml(delta)}</td>
+                  <td>${escapeHtml(cov)}</td>
+                  <td>${escapeHtml(String(r.gap_score ?? ''))}</td>
+                  <td>${escapeHtml(String(r.impact ?? ''))}</td>
+                </tr>`;
+              })
+              .join('');
+            wrap.style.display = 'block';
+            showSuccess('Topic ranking ready.');
+          } else {
+            errEl.textContent = data.error || 'Unknown error';
+            errEl.style.display = 'block';
+          }
+        } catch (err) {
+          errEl.textContent = `Network error: ${networkErrorHint(err)}`;
+          errEl.style.display = 'block';
+        } finally {
+          btn.disabled = false;
+          loading.style.display = 'none';
+        }
+      }
+
+      function downloadRankCsv() {
+        if (!lastRankCsv) return;
+        const blob = new Blob([lastRankCsv], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'topics_ranked.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      let lastBenchmarkCsv = '';
+
+      function benchmarkArtifactUrl(relPath) {
+        if (!API_BASE || !relPath) return '';
+        const parts = String(relPath).split('/').filter(Boolean);
+        return `${API_BASE}/geo/benchmark-artifacts/${parts.map(encodeURIComponent).join('/')}`;
+      }
+
+      async function runGeoBenchmark() {
+        const brand = document.getElementById('geoBrand').value.trim();
+        const errEl = document.getElementById('benchmarkError');
+        errEl.style.display = 'none';
+        if (!brand) {
+          errEl.textContent = 'Please set Target Brand above.';
+          errEl.style.display = 'block';
+          return;
+        }
+        hideError();
+        const btn = document.getElementById('benchmarkBtn');
+        const loading = document.getElementById('benchmarkLoading');
+        const plotsWrap = document.getElementById('benchmarkPlotsWrap');
+        const tableWrap = document.getElementById('benchmarkTableWrap');
+        const summaryEl = document.getElementById('benchmarkSummary');
+        lastBenchmarkCsv = '';
+        plotsWrap.style.display = 'none';
+        plotsWrap.innerHTML = '';
+        tableWrap.style.display = 'none';
+        summaryEl.style.display = 'none';
+        summaryEl.innerHTML = '';
+
+        btn.disabled = true;
+        loading.style.display = 'block';
+
+        if (!ensureApiBase()) {
+          btn.disabled = false;
+          loading.style.display = 'none';
+          return;
+        }
+
+        const body = {
+          brand,
+          include_measurement: document.getElementById('benchIncludeMeasurement')
+            .checked,
+          use_gap_as_impact: document.getElementById('benchGapImpact').checked,
+          use_adaptive_weights: document.getElementById('benchAdaptive').checked,
+          save_plots: document.getElementById('benchSavePlots').checked,
+          persist_json: document.getElementById('benchPersistJson').checked,
+          include_measurement_detail: false,
+        };
+        const qt = document.getElementById('benchmarkQueries').value.trim();
+        if (qt) {
+          body.queries = qt
+            .split('\n')
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .slice(0, 50);
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/geo/benchmark`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await readResponseJson(response);
+          if (data.success) {
+            const d = data.data;
+            lastBenchmarkCsv = d.csv || '';
+
+            const urls = d.plot_urls || [];
+            let jsonLinkHtml = '';
+            if (urls.length && urls[0].includes('/')) {
+              const jsonRel = urls[0].replace(/[/][^/]+$/, '/benchmark_results.json');
+              const ju = benchmarkArtifactUrl(jsonRel);
+              jsonLinkHtml = `<div style="margin-top:8px;font-size:0.88em"><a href="${ju.replace(/"/g, '&quot;')}" target="_blank" rel="noopener">Open benchmark_results.json</a></div>`;
+            }
+
+            const sum = d.summary || {};
+            summaryEl.innerHTML = `
+              <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:0.88em;background:#f8f9fa;padding:12px;border-radius:8px;border-left:4px solid #667eea">
+                <span><strong>Queries</strong>: ${sum.n_queries ?? '—'}</span>
+                <span><strong>Avg Δ₀₁</strong>: ${sum.avg_delta_01 ?? '—'}</span>
+                <span><strong>Avg confidence</strong>: ${sum.avg_confidence ?? '—'}</span>
+                <span><strong>Adaptive weights</strong>: ${sum.weights_learned ? escapeHtml(JSON.stringify(sum.weights_learned)) : 'fixed v2'}</span>
+              </div>
+              ${
+                d.output_dir
+                  ? `<div style="margin-top:8px;font-size:0.82em;color:#666">Artifacts: <code style="word-break:break-all">${escapeHtml(d.output_dir)}</code></div>`
+                  : ''
+              }
+              ${jsonLinkHtml}`;
+            summaryEl.style.display = 'block';
+            if (urls.length) {
+              plotsWrap.innerHTML = urls
+                .map((rel) => {
+                  const url = benchmarkArtifactUrl(rel);
+                  const fname = rel.split('/').pop() || rel;
+                  const label = escapeHtml(fname);
+                  return `<figure><img src="${url.replace(/"/g, '&quot;')}" alt="${label}" loading="lazy" /><figcaption>${label}</figcaption></figure>`;
+                })
+                .join('');
+              plotsWrap.style.display = 'grid';
+            }
+
+            const ranked = d.ranked_by_v2 || [];
+            document.getElementById('benchmarkMeta').textContent =
+              `${d.gap_queries_analyzed || 0} queries analyzed · ranked by final_score_v2`;
+            const tbody = document.getElementById('benchmarkTbody');
+            tbody.innerHTML = ranked
+              .map((r, i) => {
+                const dec = r.decision || '';
+                let decClass = 'decision-low';
+                if (dec === 'PRIORITY') decClass = 'decision-priority';
+                else if (dec === 'GOOD') decClass = 'decision-good';
+                const delta = r.delta == null ? '—' : String(r.delta);
+                const cov = r.coverage == null ? '—' : String(r.coverage);
+                const conf = r.confidence == null ? '—' : String(r.confidence);
+                const fs2 = r.final_score_v2 ?? r.final_score ?? '';
+                return `<tr>
+                  <td>${i + 1}</td>
+                  <td>${escapeHtml(r.query || '')}</td>
+                  <td><strong>${escapeHtml(String(fs2))}</strong></td>
+                  <td><span class="${decClass}">${escapeHtml(dec)}</span></td>
+                  <td>${escapeHtml(conf)}</td>
+                  <td>${escapeHtml(delta)}</td>
+                  <td>${escapeHtml(cov)}</td>
+                </tr>`;
+              })
+              .join('');
+            tableWrap.style.display = 'block';
+            showSuccess('Benchmark complete.');
+          } else {
+            errEl.textContent = data.error || 'Unknown error';
+            errEl.style.display = 'block';
+          }
+        } catch (err) {
+          errEl.textContent = `Network error: ${networkErrorHint(err)}`;
+          errEl.style.display = 'block';
+        } finally {
+          btn.disabled = false;
+          loading.style.display = 'none';
+        }
+      }
+
+      function downloadBenchmarkCsv() {
+        if (!lastBenchmarkCsv) return;
+        const blob = new Blob([lastBenchmarkCsv], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'benchmark_ranked.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
       }
 
       function resetAgentLogs() {

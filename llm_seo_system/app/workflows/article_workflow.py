@@ -38,6 +38,18 @@ from app.agents.presence_measurement import (
     build_measurement_report,
     compute_geo_opportunity_score,
 )
+from app.services.topic_ranking import (
+    build_rank_row,
+    print_opportunities_table,
+    ranked_to_csv_string,
+    rank_rows,
+)
+from app.services.geo_benchmark import (
+    benchmark_output_dir,
+    run_benchmark as run_geo_benchmark_core,
+    save_benchmark_json,
+)
+from app.services.geo_benchmark_plots import save_benchmark_plots
 
 
 class ArticleWorkflow:
@@ -633,3 +645,113 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             "published_url": None,
             "publish_result": None,
         }
+
+    def rank_topics_for_niche(
+        self,
+        brand: str,
+        niche: str,
+        *,
+        max_queries: int = 10,
+        include_measurement: bool = True,
+        use_gap_as_impact: bool = True,
+        verbose: bool = False,
+    ) -> dict:
+        """
+        Discovery → GapFinder (SERP) → optional LLM measurement per query → unified rank score.
+
+        impact in the formula is 0 unless ``use_gap_as_impact`` (normalizes gap score vs batch max).
+        """
+        brand = (brand or "").strip() or niche.split()[0]
+        niche = (niche or "").strip() or brand
+
+        print(f"\n{'='*60}")
+        print(" TOPIC RANKING (SERP + Δ + impact)")
+        print(f"   brand='{brand}' | niche='{niche}' | max_queries={max_queries}")
+        print(f"{'='*60}")
+
+        queries = self.topic_discovery_agent.generate_structured_queries(niche, brand)
+        gap_results = self.gap_finder.analyze(queries, target_brand=brand, max_queries=max_queries)
+
+        max_gs = max((float(g.get("score") or 0) for g in gap_results), default=0.0)
+        rows: list = []
+
+        for item in gap_results:
+            q = item.get("query") or ""
+            organic = item.get("organic_results") or []
+            serp_m = item.get("serp_metrics") or {}
+            gap_sc = float(item.get("score") or 0.0)
+
+            measurement_report: dict = {}
+            if include_measurement:
+                try:
+                    measurement_report = build_measurement_report(q, brand, organic)
+                    serp_from_mr = (measurement_report.get("serp") or {}) if measurement_report else {}
+                    if serp_from_mr:
+                        serp_m = serp_from_mr
+                except Exception as exc:
+                    measurement_report = {"error": str(exc), "delta_mention_rate": None}
+
+            impact = 0.0
+            if use_gap_as_impact and max_gs > 0:
+                impact = min(1.0, gap_sc / max_gs)
+
+            rows.append(
+                build_rank_row(
+                    q,
+                    gap_sc,
+                    serp_m,
+                    measurement_report,
+                    impact,
+                ),
+            )
+
+        ranked = rank_rows(rows)
+        csv_out = ranked_to_csv_string(ranked)
+
+        if verbose:
+            print_opportunities_table(ranked)
+
+        return {
+            "brand": brand,
+            "niche": niche,
+            "queries_generated": queries,
+            "gap_queries_analyzed": len(gap_results),
+            "ranked_topics": ranked,
+            "csv": csv_out,
+        }
+
+    def run_geo_benchmark(
+        self,
+        queries: list,
+        brand: str,
+        *,
+        include_measurement: bool = True,
+        use_gap_as_impact: bool = True,
+        use_adaptive_weights: bool = True,
+        save_plots: bool = True,
+        output_dir: str | None = None,
+        persist_json: bool = True,
+    ) -> dict:
+        """
+        Research batch: fixed query list → SERP + gap + measurement + ``final_score_v2``.
+
+        Saves JSON (+ optional PNG plots) under ``llm_seo_system/outputs/benchmarks/<stamp>/``.
+        Does not generate articles per query.
+        """
+        out = run_geo_benchmark_core(
+            queries,
+            brand,
+            self.gap_finder,
+            include_measurement=include_measurement,
+            use_gap_as_impact=use_gap_as_impact,
+            use_adaptive_weights=use_adaptive_weights,
+        )
+        base_dir = output_dir or benchmark_output_dir()
+        plot_paths: list = []
+        if save_plots:
+            plot_paths = save_benchmark_plots(out["results"], base_dir)
+        out["output_dir"] = base_dir
+        out["plot_paths"] = plot_paths
+        if persist_json:
+            save_benchmark_json(out, base_dir)
+        return out

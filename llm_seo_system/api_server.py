@@ -5,6 +5,7 @@ import sys
 import os
 import re
 import io
+import mimetypes
 from datetime import datetime
 from contextlib import redirect_stdout
 
@@ -14,10 +15,11 @@ _REPO_ROOT = os.path.dirname(_ROOT)
 sys.path.insert(0, _REPO_ROOT)
 sys.path.insert(0, _ROOT)
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response, send_file
 from flask_cors import CORS
 import json
 from app.workflows.article_workflow import ArticleWorkflow
+from app.services.topic_ranking import ranked_to_csv_string
 from app.outputs.storage_service import StorageService
 from app.services.memory_service import MemoryService
 from app.config.brand_configs import BRAND_CONFIGS, get_brand_topics
@@ -27,6 +29,24 @@ from app.agents.ai_citation_tracker_agent import AICitationTrackerAgent
 from app.agents.competitor_intelligence_agent import CompetitorIntelligenceAgent
 
 app = Flask(__name__)
+
+_BENCHMARK_ARTIFACT_ROOT = os.path.abspath(os.path.join(_ROOT, "outputs", "benchmarks"))
+
+
+def _benchmark_relative_urls(plot_paths):
+    """Turn absolute plot paths into slash paths under outputs/benchmarks for GET artifact URLs."""
+    out = []
+    root = _BENCHMARK_ARTIFACT_ROOT
+    for p in plot_paths or []:
+        try:
+            ap = os.path.abspath(p)
+            if not ap.startswith(root + os.sep):
+                continue
+            rel = os.path.relpath(ap, root).replace(os.sep, "/")
+            out.append(rel)
+        except (OSError, ValueError):
+            continue
+    return out
 
 _cors_origins = [
     "https://llm-seo-automation-system.vercel.app",
@@ -779,6 +799,145 @@ def geo_pipeline():
             "error": str(e),
             "logs": _split_logs(log_capture.getvalue()),
         }), 500
+
+
+@app.route("/api/geo/rank-topics", methods=["POST"])
+def geo_rank_topics():
+    """
+    Rank discovered queries by SERP + measurement Δ + optional gap-based impact.
+    POST JSON: brand, niche, max_queries (opt), include_measurement (opt),
+    use_gap_as_impact (opt), top_n (opt, default 10), format (json|csv).
+    """
+    try:
+        data = request.json or {}
+        brand = (data.get("brand") or "").strip()
+        niche = (data.get("niche") or "").strip()
+        if not brand and not niche:
+            return jsonify({"success": False, "error": "brand or niche is required"}), 400
+        if not brand:
+            brand = niche.split()[0]
+        if not niche:
+            niche = brand
+
+        max_queries = int(data.get("max_queries") or 10)
+        max_queries = max(1, min(max_queries, 30))
+        include_measurement = bool(data.get("include_measurement", True))
+        use_gap_as_impact = bool(data.get("use_gap_as_impact", True))
+        top_n = int(data.get("top_n") or 10)
+        top_n = max(1, min(top_n, 50))
+        fmt = (data.get("format") or "json").strip().lower()
+
+        result = workflow.rank_topics_for_niche(
+            brand,
+            niche,
+            max_queries=max_queries,
+            include_measurement=include_measurement,
+            use_gap_as_impact=use_gap_as_impact,
+            verbose=False,
+        )
+
+        ranked = result.get("ranked_topics") or []
+        ranked_slice = ranked[:top_n]
+        csv_full = result.get("csv") or ""
+        csv_top = ranked_to_csv_string(ranked_slice) if ranked_slice else ""
+
+        if fmt == "csv":
+            return Response(
+                csv_top or csv_full,
+                mimetype="text/csv; charset=utf-8",
+                headers={
+                    "Content-Disposition": 'attachment; filename="topics_ranked.csv"',
+                },
+            )
+
+        return jsonify({
+            "success": True,
+            "data": {
+                "brand": result.get("brand"),
+                "niche": result.get("niche"),
+                "queries_generated": result.get("queries_generated"),
+                "gap_queries_analyzed": result.get("gap_queries_analyzed"),
+                "ranked_topics": ranked_slice,
+                "ranked_topics_total": len(ranked),
+                "csv": csv_full,
+                "csv_top_n": csv_top,
+            },
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/geo/benchmark", methods=["POST"])
+def geo_benchmark_route():
+    """
+    Batch benchmark (20–50 queries): SERP + measurement + final_score_v2 + adaptive weights.
+    POST JSON: brand (required), queries (optional — default laptop preset),
+    include_measurement, use_gap_as_impact, use_adaptive_weights,
+    save_plots, persist_json, include_measurement_detail.
+    """
+    try:
+        data = request.json or {}
+        brand = (data.get("brand") or "").strip()
+        if not brand:
+            return jsonify({"success": False, "error": "brand is required"}), 400
+
+        from app.services.geo_benchmark import DEFAULT_BENCHMARK_QUERIES
+
+        queries = data.get("queries")
+        if not queries:
+            queries = DEFAULT_BENCHMARK_QUERIES
+        if not isinstance(queries, list):
+            return jsonify({"success": False, "error": "queries must be a list"}), 400
+
+        queries = [str(q).strip() for q in queries if str(q).strip()][:50]
+
+        include_measurement = bool(data.get("include_measurement", True))
+        use_gap_as_impact = bool(data.get("use_gap_as_impact", True))
+        use_adaptive_weights = bool(data.get("use_adaptive_weights", True))
+        save_plots = bool(data.get("save_plots", True))
+        persist_json = bool(data.get("persist_json", True))
+        include_measurement_detail = bool(data.get("include_measurement_detail", False))
+
+        result = workflow.run_geo_benchmark(
+            queries,
+            brand,
+            include_measurement=include_measurement,
+            use_gap_as_impact=use_gap_as_impact,
+            use_adaptive_weights=use_adaptive_weights,
+            save_plots=save_plots,
+            persist_json=persist_json,
+        )
+
+        def slim(rows):
+            if include_measurement_detail:
+                return rows
+            return [{k: v for k, v in r.items() if k != "measurement_report"} for r in rows]
+
+        payload = dict(result)
+        payload["results"] = slim(result.get("results") or [])
+        payload["ranked_by_v2"] = slim(result.get("ranked_by_v2") or [])
+        payload["plot_urls"] = _benchmark_relative_urls(result.get("plot_paths"))
+
+        return jsonify({"success": True, "data": payload}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/geo/benchmark-artifacts/<path:rel>", methods=["GET"])
+def geo_benchmark_artifact(rel):
+    """
+    Serve files from llm_seo_system/outputs/benchmarks/ (PNG, JSON). Path traversal blocked.
+    """
+    if not rel or ".." in rel.split("/"):
+        return jsonify({"error": "invalid path"}), 400
+    safe_root = _BENCHMARK_ARTIFACT_ROOT
+    full = os.path.abspath(os.path.join(safe_root, rel))
+    if not full.startswith(safe_root + os.sep):
+        return jsonify({"error": "forbidden"}), 403
+    if not os.path.isfile(full):
+        return jsonify({"error": "not found"}), 404
+    mime, _ = mimetypes.guess_type(full)
+    return send_file(full, mimetype=mime or "application/octet-stream")
 
 
 if __name__ == "__main__":
