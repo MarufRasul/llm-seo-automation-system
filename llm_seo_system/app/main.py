@@ -1,3 +1,11 @@
+import os
+import sys
+
+_LLM_SYS_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_REPO_ROOT = os.path.dirname(_LLM_SYS_ROOT)
+sys.path.insert(0, _REPO_ROOT)
+sys.path.insert(0, _LLM_SYS_ROOT)
+
 from app.workflows.article_workflow import ArticleWorkflow
 
 

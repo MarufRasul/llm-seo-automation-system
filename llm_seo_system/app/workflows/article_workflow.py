@@ -25,7 +25,7 @@ from app.agents.site_brain_agent import SiteBrainAgent
 from app.agents.citation_optimizer_agent import CitationOptimizerAgent
 from app.agents.query_simulator_agent import QuerySimulatorAgent
 from app.agents.topic_discovery_agent import TopicDiscoveryAgent
-from app.agents.gap_finder_agent import GapFinderAgent
+from llm_seo_system.app.agents.gap_finder_agent import GapFinderAgent
 from app.agents.strategy_builder_agent import StrategyBuilderAgent
 from app.agents.validator_agent import ValidatorAgent
 from app.agents.llm_presence_checker import LLMPresenceChecker

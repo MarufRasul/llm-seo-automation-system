@@ -5,6 +5,12 @@ import logging
 import os
 import sys
 from datetime import datetime
+
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_ROOT)
+sys.path.insert(0, _REPO_ROOT)
+sys.path.insert(0, _ROOT)
+
 from dotenv import load_dotenv
 from app.batch.batch_generator import BatchContentGenerator
 from app.workflows.article_workflow import ArticleWorkflow

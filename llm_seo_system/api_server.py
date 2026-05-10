@@ -8,8 +8,11 @@ import io
 from datetime import datetime
 from contextlib import redirect_stdout
 
-# Add current directory to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# llm_seo_system/ for `app.*`; repo root for `llm_seo_system.app.*`
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_ROOT)
+sys.path.insert(0, _REPO_ROOT)
+sys.path.insert(0, _ROOT)
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
