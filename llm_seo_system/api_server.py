@@ -24,7 +24,21 @@ from app.agents.ai_citation_tracker_agent import AICitationTrackerAgent
 from app.agents.competitor_intelligence_agent import CompetitorIntelligenceAgent
 
 app = Flask(__name__)
-CORS(app)
+
+_cors_origins = [
+    "https://llm-seo-automation-system.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+_extra = os.environ.get("CORS_ORIGINS", "")
+if _extra:
+    _cors_origins.extend(s.strip() for s in _extra.split(",") if s.strip())
+
+CORS(app, origins=_cors_origins)
 
 # Initialize services
 workflow = ArticleWorkflow()

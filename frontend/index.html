@@ -7,6 +7,8 @@
       name="google-site-verification"
       content="iTrBveBqjTXSVYCCgGLyIzxxs8OIHWYbnYHcuzJwqW8"
     />
+    <!-- Override API URL (optional). If empty, production uses DEFAULT_PRODUCTION_API_BASE in script. -->
+    <meta name="api-base" content="" />
     <title>AI SEO Blog Generator - GEO Content Engine</title>
     <style>
       * {
@@ -992,7 +994,50 @@
     </div>
 
     <script>
-      const API_BASE = 'http://localhost:5000/api';
+      function normalizeApiBase(raw) {
+        if (raw == null) return null;
+        const s = String(raw).trim();
+        if (!s) return null;
+        let u = s.replace(/\/$/, '');
+        if (!u.endsWith('/api')) u += '/api';
+        return u;
+      }
+
+      /** Deployed Flask (Render, etc.). Replace with your real service URL + /api */
+      const DEFAULT_PRODUCTION_API_BASE = 'https://your-api.onrender.com/api';
+
+      function resolveApiBase() {
+        const h = window.location.hostname;
+        if (h === 'localhost' || h === '127.0.0.1') {
+          return 'http://localhost:5000/api';
+        }
+        const meta = document.querySelector('meta[name="api-base"]');
+        const fromMeta = normalizeApiBase(
+          meta && meta.getAttribute('content'),
+        );
+        if (fromMeta) return fromMeta;
+        return DEFAULT_PRODUCTION_API_BASE;
+      }
+
+      const API_BASE = resolveApiBase();
+
+      function ensureApiBase() {
+        if (API_BASE) return true;
+        showError(
+          'API URL is not configured for this host. Add <meta name="api-base" content="https://YOUR_HOST/api"> (your deployed Flask server with CORS), or open this app at http://localhost with python api_server.py running.',
+        );
+        return false;
+      }
+
+      function networkErrorHint(err) {
+        const msg = err && err.message ? err.message : String(err);
+        if (msg !== 'Failed to fetch') return msg;
+        if (API_BASE && API_BASE.startsWith('http://localhost')) {
+          return 'Failed to fetch: HTTPS pages cannot call http://localhost. Use meta api-base for a public API, or open via http://localhost.';
+        }
+        return 'Failed to fetch: check API URL (meta api-base), CORS, and that the backend is running.';
+      }
+
       let metricsRefreshInterval;
       let currentMode = 'geo'; // default: GEO Pipeline
 
@@ -1099,6 +1144,12 @@
           'Waiting for full agent pipeline to finish...',
         ]);
 
+        if (!ensureApiBase()) {
+          btn.disabled = false;
+          loading.style.display = 'none';
+          return;
+        }
+
         try {
           const response = await fetch(`${API_BASE}/generate`, {
             method: 'POST',
@@ -1149,7 +1200,7 @@
             showError(` Error: ${data.error}`);
           }
         } catch (error) {
-          showError(`Network error: ${error.message}`);
+          showError(`Network error: ${networkErrorHint(error)}`);
         } finally {
           btn.disabled = false;
           loading.style.display = 'none';
@@ -1184,6 +1235,12 @@
         const logsPanel = document.getElementById('agentLogs');
         const logsBody = document.getElementById('agentLogsBody');
         const logsCount = document.getElementById('agentLogsCount');
+
+        if (!ensureApiBase()) {
+          btn.disabled = false;
+          loading.style.display = 'none';
+          return;
+        }
 
         try {
           const response = await fetch(`${API_BASE}/geo-pipeline`, {
@@ -1409,7 +1466,7 @@
             showError(`Error: ${data.error}`);
           }
         } catch (err) {
-          showError(`Network error: ${err.message}`);
+          showError(`Network error: ${networkErrorHint(err)}`);
         } finally {
           btn.disabled = false;
           loading.style.display = 'none';
@@ -1455,6 +1512,7 @@
 
       // ============ METRICS LOADING ============
       async function refreshMetricsDashboard() {
+        if (!API_BASE) return;
         try {
           const response = await fetch(`${API_BASE}/metrics/dashboard`);
           const data = await response.json();
@@ -1489,6 +1547,12 @@
       async function loadCitationsData() {
         const container = document.getElementById('citationsContent');
         container.innerHTML = '<p style="color: #999">Loading citations...</p>';
+
+        if (!API_BASE) {
+          container.innerHTML =
+            '<p style="color:#999">Configure <code>meta name="api-base"</code> to load citations.</p>';
+          return;
+        }
 
         try {
           const response = await fetch(`${API_BASE}/metrics/ai-citations`);
@@ -1587,6 +1651,11 @@
 
         container.innerHTML =
           '<p style="color: #999">Loading competitor analysis...</p>';
+
+        if (!ensureApiBase()) {
+          container.innerHTML = '';
+          return;
+        }
 
         try {
           const response = await fetch(
@@ -1688,6 +1757,12 @@
         container.innerHTML =
           '<p style="color: #999">Loading full metrics dashboard...</p>';
 
+        if (!API_BASE) {
+          container.innerHTML =
+            '<p style="color:#999">Configure <code>meta name="api-base"</code> for full metrics.</p>';
+          return;
+        }
+
         try {
           const response = await fetch(`${API_BASE}/metrics/dashboard`);
           const data = await response.json();
@@ -1751,6 +1826,7 @@
       }
 
       async function trackNewArticleCitation(topic) {
+        if (!API_BASE) return;
         try {
           const response = await fetch(`${API_BASE}/metrics/track-citation`, {
             method: 'POST',
@@ -1774,6 +1850,7 @@
 
       // ============ ARTICLES MANAGEMENT ============
       async function loadStats() {
+        if (!API_BASE) return;
         try {
           const articlesRes = await fetch(`${API_BASE}/articles`);
           const articlesData = await articlesRes.json();
@@ -1849,6 +1926,12 @@
         contentContainer.classList.add('open');
         textElement.textContent = 'Loading article details...';
 
+        if (!ensureApiBase()) {
+          textElement.textContent =
+            'Configure meta api-base to load article content.';
+          return;
+        }
+
         try {
           const response = await fetch(
             `${API_BASE}/article/${encodeURIComponent(topic)}`,
@@ -1861,7 +1944,7 @@
             textElement.textContent = `Error loading article: ${data.error}`;
           }
         } catch (error) {
-          textElement.textContent = `Network error: ${error.message}`;
+          textElement.textContent = `Network error: ${networkErrorHint(error)}`;
         }
       }
 
@@ -1869,6 +1952,8 @@
         if (!confirm(`Delete article "${topic}"? This cannot be undone.`)) {
           return;
         }
+
+        if (!ensureApiBase()) return;
 
         try {
           const response = await fetch(
@@ -1887,7 +1972,7 @@
             showError(`❌ Delete failed: ${data.error}`);
           }
         } catch (error) {
-          showError(`Network error: ${error.message}`);
+          showError(`Network error: ${networkErrorHint(error)}`);
         }
       }
 
@@ -1897,7 +1982,9 @@
         refreshMetricsDashboard();
 
         // Auto-refresh metrics every 30 seconds
-        metricsRefreshInterval = setInterval(refreshMetricsDashboard, 30000);
+        if (API_BASE) {
+          metricsRefreshInterval = setInterval(refreshMetricsDashboard, 30000);
+        }
       });
 
       window.addEventListener('beforeunload', () => {
