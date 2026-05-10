@@ -314,3 +314,90 @@ def build_measurement_report(
             "with_context uses Tavily or SERP excerpts — never your generated article."
         ),
     }
+
+
+# --- Product-level unified opportunity score ----------------------------------
+
+
+def _interpret_opportunity(final_score: float) -> str:
+    if final_score >= 0.8:
+        return "strong opportunity"
+    if final_score >= 0.6:
+        return "worth doing"
+    if final_score >= 0.4:
+        return "mixed"
+    return "low priority"
+
+
+def _opportunity_decision(final_score: float) -> str:
+    if final_score > 0.8:
+        return "PRIORITY ARTICLE"
+    if final_score > 0.6:
+        return "GOOD TOPIC"
+    return "SKIP"
+
+
+def compute_geo_opportunity_score(
+    measurement_report: Dict[str, Any],
+    presence_check: Dict[str, Any] | None,
+) -> Dict[str, Any]:
+    """
+    Single product metric: SERP (reality) + Δ (independent LLM eval) + impact (article effect).
+
+    final_score = 0.5 * serp_final + 0.3 * delta_01 + 0.2 * impact_score
+    All sub-scores in [0, 1] where possible.
+    """
+    if measurement_report.get("error"):
+        return {
+            "final_score": None,
+            "decision": "SKIP",
+            "interpretation": "error",
+            "error": measurement_report.get("error"),
+            "components": {},
+        }
+
+    serp = measurement_report.get("serp") or {}
+    coverage = float(serp.get("coverage", 0.0))
+    first_rank = int(serp.get("first_rank", 999))
+
+    serp_score = 1.0 - max(0.0, min(1.0, coverage))
+    rank_score = (1.0 / first_rank) if first_rank < 999 else 0.0
+    serp_final = 0.7 * serp_score + 0.3 * rank_score
+
+    raw_delta = measurement_report.get("delta_mention_rate")
+    if raw_delta is None:
+        delta_01 = 0.0
+    else:
+        d = float(raw_delta)
+        d = max(-1.0, min(1.0, d))
+        # Map [-1, 1] → [0, 1] so negative lifts do not explode the sum
+        delta_01 = (d + 1.0) / 2.0
+
+    presence = presence_check or {}
+    impact = float(presence.get("impact_score", 0.0))
+    impact = max(0.0, min(1.0, impact))
+
+    final_score = (
+        0.5 * serp_final + 0.3 * delta_01 + 0.2 * impact
+    )
+    final_score = max(0.0, min(1.0, final_score))
+
+    decision = _opportunity_decision(final_score)
+
+    return {
+        "final_score": round(final_score, 4),
+        "decision": decision,
+        "interpretation": _interpret_opportunity(final_score),
+        "components": {
+            "serp_score": round(serp_score, 4),
+            "rank_score": round(rank_score, 4),
+            "serp_final": round(serp_final, 4),
+            "coverage": coverage,
+            "first_rank": first_rank,
+            "delta_mention_rate_raw": raw_delta,
+            "delta_component_01": round(delta_01, 4),
+            "impact_score": impact,
+        },
+        "weights": {"serp_final": 0.5, "delta_01": 0.3, "impact": 0.2},
+        "formula": "0.5*serp_final + 0.3*delta_01 + 0.2*impact",
+    }

@@ -759,6 +759,7 @@ def geo_pipeline():
             "file_path": article_path,
             "gap_analysis": result.get("gap_analysis", []),
             "measurement_report": result.get("measurement_report", {}),
+            "geo_opportunity": result.get("geo_opportunity", {}),
             "strategy": result.get("strategy", {}),
             "validation": result.get("validation", {}),
             "presence_check": result.get("presence_check", {}),

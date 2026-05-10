@@ -34,7 +34,10 @@ from app.agents.rag_evaluator_agent import RAGEvaluatorAgent
 from app.agents.ai_citation_tracker_agent import AICitationTrackerAgent
 from app.agents.indexation_agent import IndexationAgent
 from app.outputs.github_publisher import GitHubPagesPublisher
-from app.agents.presence_measurement import build_measurement_report
+from app.agents.presence_measurement import (
+    build_measurement_report,
+    compute_geo_opportunity_score,
+)
 
 
 class ArticleWorkflow:
@@ -593,11 +596,22 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
         print(f"   Topic:      {topic}")
         print(f"   Iterations: {iteration + 1}")
         print(f"   Validation: {'PASS' if validation['valid'] else 'FAIL'}")
-        for model_label, mr in presence.get("results", {}).items():
+        for model_label, mr in (presence or {}).get("results", {}).items():
             b = "✅" if mr["before"]["present"] else "❌"
             a = "✅" if mr["after"]["present"] else "❌"
             print(f"   {model_label:6s}: BEFORE={b} → AFTER={a}  {'' if mr['impact'] else ''}")
         print(f"{'='*60}\n")
+
+        geo_opportunity = compute_geo_opportunity_score(
+            measurement_report,
+            presence or {},
+        )
+        _fs = geo_opportunity.get("final_score")
+        if _fs is not None:
+            print(
+                f" 🎯 Opportunity Score: {_fs} → {geo_opportunity.get('decision')} "
+                f"({geo_opportunity.get('interpretation')})",
+            )
 
         return {
             "topic": topic,
@@ -610,6 +624,7 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             "seo_score": f"Validation: {'PASS' if validation['valid'] else 'FAIL — ' + ', '.join(validation['issues'])}",
             "gap_analysis": gap_results[:5],
             "measurement_report": measurement_report,
+            "geo_opportunity": geo_opportunity,
             "strategy": strategy_result,
             "validation": validation,
             "presence_check": presence,
