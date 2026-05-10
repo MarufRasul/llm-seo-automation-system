@@ -17,6 +17,15 @@ from typing import Any, Dict, List, Tuple
 
 import requests
 
+# Deprecated IDs (e.g. claude-3-haiku-20240307) return 404 — use a current Haiku/Sonnet ID.
+# Aligns with LLMPresenceChecker; override via GEO_EVAL_ANTHROPIC_MODEL.
+_DEFAULT_ANTHROPIC_EVAL_MODEL = "claude-haiku-4-5-20251001"
+
+
+def _anthropic_eval_model() -> str:
+    return os.getenv("GEO_EVAL_ANTHROPIC_MODEL", _DEFAULT_ANTHROPIC_EVAL_MODEL)
+
+
 # --- SERP ---------------------------------------------------------------------
 
 def brand_mentioned_in_text(text: str, brand: str) -> bool:
@@ -134,7 +143,7 @@ def ask_openai_baseline(query: str, model: str | None = None) -> str:
 
 def ask_anthropic_baseline(query: str, model: str | None = None) -> str:
     """Evaluator B: different provider, same task shape, different wording."""
-    model = model or os.getenv("GEO_EVAL_ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+    model = model or _anthropic_eval_model()
     client = _anthropic_client()
     msg = client.messages.create(
         model=model,
@@ -171,7 +180,7 @@ def evaluate_llm_baseline(query: str, brand: str) -> Tuple[Dict[str, bool], floa
             print(f"  ⚠️ OpenAI baseline eval failed: {e}")
     if os.getenv("ANTHROPIC_API_KEY"):
         try:
-            cl_model = os.getenv("GEO_EVAL_ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+            cl_model = _anthropic_eval_model()
             ans = ask_anthropic_baseline(query, cl_model)
             results[f"anthropic:{cl_model}"] = check_mention(ans, brand)
         except Exception as e:
@@ -209,7 +218,7 @@ def ask_openai_with_context(query: str, context: str, model: str | None = None) 
 
 
 def ask_anthropic_with_context(query: str, context: str, model: str | None = None) -> str:
-    model = model or os.getenv("GEO_EVAL_ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+    model = model or _anthropic_eval_model()
     client = _anthropic_client()
     msg = client.messages.create(
         model=model,
@@ -247,7 +256,7 @@ def evaluate_llm_with_external_context(
             print(f"  ⚠️ OpenAI context eval failed: {e}")
     if os.getenv("ANTHROPIC_API_KEY"):
         try:
-            cl_model = os.getenv("GEO_EVAL_ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+            cl_model = _anthropic_eval_model()
             ans = ask_anthropic_with_context(query, context, cl_model)
             results[f"anthropic:{cl_model}"] = check_mention(ans, brand)
         except Exception as e:
