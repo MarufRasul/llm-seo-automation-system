@@ -624,6 +624,9 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
                 f" 🎯 Opportunity Score: {_fs} → {geo_opportunity.get('decision')} "
                 f"({geo_opportunity.get('interpretation')})",
             )
+        _note = geo_opportunity.get("consistency_note")
+        if _note:
+            print(f" 📌 Δ vs impact: {_note}")
 
         return {
             "topic": topic,

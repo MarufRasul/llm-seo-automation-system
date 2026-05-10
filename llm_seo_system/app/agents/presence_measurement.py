@@ -13,7 +13,7 @@ Rules:
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
@@ -340,12 +340,45 @@ def _opportunity_decision(final_score: float) -> str:
     return "SKIP"
 
 
+def _consistency_note_delta_vs_impact(
+    raw_delta: Optional[float],
+    impact: float,
+) -> Optional[str]:
+    """
+    When Δ≈0 but impact is high: not a bug — different experimental channels.
+
+    Δ = SERP/Tavily snippets only (no article). impact_score = before/after your generated article.
+    """
+    if raw_delta is None:
+        return None
+    try:
+        rd = float(raw_delta)
+    except (TypeError, ValueError):
+        return None
+    if abs(rd) > 0.05:
+        return None
+    if impact < 0.35:
+        return None
+    return (
+        "Δ≈0 means third-party context alone did not increase brand mentions vs the baseline evaluators; "
+        "high impact_score means your generated article still moved models when they read it. "
+        "Those measure different channels — not a contradiction."
+    )
+
+
 def compute_geo_opportunity_score(
     measurement_report: Dict[str, Any],
     presence_check: Dict[str, Any] | None,
 ) -> Dict[str, Any]:
     """
     Single product metric: SERP (reality) + Δ (independent LLM eval) + impact (article effect).
+
+    **Δ (measurement)** tests only external retrieval (SERP/Tavily excerpts in the evaluator prompt).
+    Your generated article is never injected there.
+
+    **impact_score (presence check)** tests before/after passing YOUR article to models — a controlled
+    content effect. Low Δ with high impact often means the live SERP/context rarely surfaces the brand,
+    while your draft explicitly positions it.
 
     final_score = 0.5 * serp_final + 0.3 * delta_01 + 0.2 * impact_score
     All sub-scores in [0, 1] where possible.
@@ -357,6 +390,8 @@ def compute_geo_opportunity_score(
             "interpretation": "error",
             "error": measurement_report.get("error"),
             "components": {},
+            "channels": {},
+            "consistency_note": None,
         }
 
     serp = measurement_report.get("serp") or {}
@@ -387,10 +422,23 @@ def compute_geo_opportunity_score(
 
     decision = _opportunity_decision(final_score)
 
+    consistency_note = _consistency_note_delta_vs_impact(raw_delta, impact)
+
     return {
         "final_score": round(final_score, 4),
         "decision": decision,
         "interpretation": _interpret_opportunity(final_score),
+        "channels": {
+            "delta": (
+                "Δ measures change in brand mentions when evaluators see only query + SERP/Tavily excerpts "
+                "(vs query-only). No generated article is used."
+            ),
+            "impact": (
+                "impact_score is the presence checker: models answer before vs after seeing YOUR article. "
+                "That is a direct content intervention, not market retrieval."
+            ),
+        },
+        "consistency_note": consistency_note,
         "components": {
             "serp_score": round(serp_score, 4),
             "rank_score": round(rank_score, 4),

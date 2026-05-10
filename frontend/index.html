@@ -1088,6 +1088,19 @@
         style="display: none; margin-bottom: 30px"
       >
         <h2><span class="icon"></span> GEO Pipeline Results</h2>
+        <div
+          id="geoOpportunityPanel"
+          style="
+            display: none;
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            font-size: 0.88em;
+            color: #0c4a6e;
+          "
+        ></div>
         <div class="geo-pipeline-grid" id="geoPipelineResults">
           <div class="geo-panel">
             <h4>Gap Analysis</h4>
@@ -1612,6 +1625,32 @@
               });
             }
             document.getElementById('geoGapList').innerHTML = gapHtml;
+
+            // ── Measurement Δ vs article impact (geo_opportunity) ─────────
+            const go = d.geo_opportunity || {};
+            const oppEl = document.getElementById('geoOpportunityPanel');
+            if (
+              go.final_score != null ||
+              go.consistency_note ||
+              (go.channels && (go.channels.delta || go.channels.impact))
+            ) {
+              let oppHtml = '';
+              if (go.final_score != null) {
+                oppHtml += `<div><strong>Opportunity score</strong>: ${escapeHtml(String(go.final_score))} → ${escapeHtml(go.decision || '')} <span style="opacity:.85">(${escapeHtml(go.interpretation || '')})</span></div>`;
+              }
+              const ch = go.channels || {};
+              if (ch.delta || ch.impact) {
+                oppHtml += `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">What Δ vs impact_score mean</summary><p style="margin:8px 0 4px;line-height:1.45">${escapeHtml(ch.delta || '')}</p><p style="margin:0;line-height:1.45">${escapeHtml(ch.impact || '')}</p></details>`;
+              }
+              if (go.consistency_note) {
+                oppHtml += `<div style="margin-top:10px;padding:10px;background:#fef9c3;border-radius:6px;color:#854d0e;line-height:1.45">${escapeHtml(go.consistency_note)}</div>`;
+              }
+              oppEl.innerHTML = oppHtml;
+              oppEl.style.display = 'block';
+            } else {
+              oppEl.innerHTML = '';
+              oppEl.style.display = 'none';
+            }
 
             // ── Strategy ──────────────────────────────────────────────────
             const strat = (d.strategy || {}).strategy || {};
