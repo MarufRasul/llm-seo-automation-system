@@ -80,3 +80,71 @@ Write in bullet points. No fluff. Prefer specific numbers and current year data 
         response = self.llm.invoke(prompt)
         print(f"✅ ResearchAgent: research completed for '{topic}'")
         return response.content
+
+
+if __name__ == "__main__":
+    import argparse
+    from pathlib import Path
+
+    from dotenv import load_dotenv
+
+    _here = Path(__file__).resolve()
+    _llm_seo_system = _here.parents[2]
+    _repo_root = _llm_seo_system.parent
+    load_dotenv(_repo_root / ".env")
+    load_dotenv(_llm_seo_system / ".env")
+    load_dotenv()
+
+    parser = argparse.ArgumentParser(
+        description="Run ResearchAgent once (prints research bundle for ArticleAgent).",
+    )
+    parser.add_argument(
+        "topic",
+        nargs="?",
+        default="LG Gram laptop for students",
+        help="Research topic / query",
+    )
+    parser.add_argument("--brand", default="LG Gram", help="Brand label for search/scrape")
+    parser.add_argument(
+        "--product-type",
+        default="laptop",
+        help="Product category (passed to web research)",
+    )
+    parser.add_argument(
+        "--brand-key",
+        default=None,
+        help="Key from brand_configs (e.g. lg_notebook) to scrape official site first",
+    )
+    parser.add_argument(
+        "--no-scraper",
+        action="store_true",
+        help="Disable official-site scraping",
+    )
+    parser.add_argument(
+        "--no-web-search",
+        action="store_true",
+        help="Disable SerpAPI Google path (LLM-only if no scrape data)",
+    )
+    args = parser.parse_args()
+
+    if not os.getenv("OPENAI_API_KEY"):
+        print(
+            "Missing OPENAI_API_KEY. Add it to .env in the repo root "
+            f"({_repo_root / '.env'}) or export it in the shell.",
+        )
+        raise SystemExit(1)
+
+    agent = ResearchAgent(
+        use_web_search=not args.no_web_search,
+        use_web_scraper=not args.no_scraper,
+    )
+    out = agent.research(
+        topic=args.topic,
+        brand=args.brand,
+        product_type=args.product_type,
+        brand_key=args.brand_key,
+    )
+    print("\n" + "=" * 60)
+    print("RESEARCH OUTPUT")
+    print("=" * 60 + "\n")
+    print(out)
