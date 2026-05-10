@@ -1004,7 +1004,8 @@
       }
 
       /** Deployed Flask (Render, etc.). Replace with your real service URL + /api */
-      const DEFAULT_PRODUCTION_API_BASE = 'https://your-api.onrender.com/api';
+      const DEFAULT_PRODUCTION_API_BASE =
+        'https://llm-seo-automation-system.onrender.com/api';
 
       function resolveApiBase() {
         const h = window.location.hostname;
@@ -1031,11 +1032,42 @@
 
       function networkErrorHint(err) {
         const msg = err && err.message ? err.message : String(err);
+        if (
+          msg.includes('Unexpected token') &&
+          (msg.includes('<!DOCTYPE') || msg.includes("'<',"))
+        ) {
+          return (
+            'API returned HTML instead of JSON. Set meta api-base or DEFAULT_PRODUCTION_API_BASE to your Flask URL ending in /api (e.g. https://your-app.onrender.com/api), not the Vercel frontend URL.'
+          );
+        }
         if (msg !== 'Failed to fetch') return msg;
         if (API_BASE && API_BASE.startsWith('http://localhost')) {
           return 'Failed to fetch: HTTPS pages cannot call http://localhost. Use meta api-base for a public API, or open via http://localhost.';
         }
         return 'Failed to fetch: check API URL (meta api-base), CORS, and that the backend is running.';
+      }
+
+      async function readResponseJson(response) {
+        const text = await response.text();
+        const trimmed = text.trim();
+        if (
+          trimmed.startsWith('<!') ||
+          trimmed.startsWith('<html') ||
+          trimmed.startsWith('<HTML')
+        ) {
+          throw new Error(
+            `HTTP ${response.status}: server returned HTML, not JSON. Point API_BASE to your backend (…/api), not the static site. Current base: ${API_BASE || '(none)'}`,
+          );
+        }
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          const preview =
+            text.length > 180 ? `${text.slice(0, 180)}…` : text;
+          throw new Error(
+            `Invalid JSON (HTTP ${response.status}): ${preview}`,
+          );
+        }
       }
 
       let metricsRefreshInterval;
@@ -1160,7 +1192,7 @@
             }),
           });
 
-          const data = await response.json();
+          const data = await readResponseJson(response);
 
           if (data.success) {
             renderAgentLogs(data.data.logs || []);
@@ -1249,7 +1281,7 @@
             body: JSON.stringify({ brand, niche }),
           });
 
-          const data = await response.json();
+          const data = await readResponseJson(response);
 
           if (data.success) {
             const d = data.data;
@@ -1515,7 +1547,7 @@
         if (!API_BASE) return;
         try {
           const response = await fetch(`${API_BASE}/metrics/dashboard`);
-          const data = await response.json();
+          const data = await readResponseJson(response);
 
           if (data.success) {
             const ai = data.data.ai_visibility;
@@ -1556,7 +1588,7 @@
 
         try {
           const response = await fetch(`${API_BASE}/metrics/ai-citations`);
-          const data = await response.json();
+          const data = await readResponseJson(response);
 
           if (data.success) {
             const report = data.data.report;
@@ -1667,7 +1699,7 @@
             },
           );
 
-          const data = await response.json();
+          const data = await readResponseJson(response);
 
           if (data.success) {
             const gaps = data.data.gap_opportunities;
@@ -1765,7 +1797,7 @@
 
         try {
           const response = await fetch(`${API_BASE}/metrics/dashboard`);
-          const data = await response.json();
+          const data = await readResponseJson(response);
 
           if (data.success) {
             const d = data.data;
@@ -1839,7 +1871,7 @@
           });
 
           if (response.ok) {
-            const data = await response.json();
+            const data = await readResponseJson(response);
             console.log('✅ Citation tracking started for:', topic);
             refreshMetricsDashboard();
           }
@@ -1853,10 +1885,10 @@
         if (!API_BASE) return;
         try {
           const articlesRes = await fetch(`${API_BASE}/articles`);
-          const articlesData = await articlesRes.json();
+          const articlesData = await readResponseJson(articlesRes);
 
           const memoryRes = await fetch(`${API_BASE}/memory`);
-          const memoryData = await memoryRes.json();
+          const memoryData = await readResponseJson(memoryRes);
 
           // Load articles list
           const articlesList = document.getElementById('articlesList');
@@ -1936,7 +1968,7 @@
           const response = await fetch(
             `${API_BASE}/article/${encodeURIComponent(topic)}`,
           );
-          const data = await response.json();
+          const data = await readResponseJson(response);
 
           if (data.success) {
             textElement.textContent = data.content;
@@ -1963,7 +1995,7 @@
             },
           );
 
-          const data = await response.json();
+          const data = await readResponseJson(response);
 
           if (data.success) {
             showSuccess(data.message || 'Article deleted successfully.');
