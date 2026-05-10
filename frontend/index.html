@@ -1003,9 +1003,9 @@
         return u;
       }
 
-      /** Deployed Flask (Render, etc.). Replace with your real service URL + /api */
-      const DEFAULT_PRODUCTION_API_BASE =
-        'https://llm-seo-automation-system.onrender.com/api';
+      /** Render API host (no /api — normalizeApiBase appends it). */
+      const DEFAULT_PRODUCTION_API_ORIGIN =
+        'https://llm-seo-automation-system.onrender.com';
 
       function resolveApiBase() {
         const h = window.location.hostname;
@@ -1017,7 +1017,7 @@
           meta && meta.getAttribute('content'),
         );
         if (fromMeta) return fromMeta;
-        return DEFAULT_PRODUCTION_API_BASE;
+        return normalizeApiBase(DEFAULT_PRODUCTION_API_ORIGIN);
       }
 
       const API_BASE = resolveApiBase();

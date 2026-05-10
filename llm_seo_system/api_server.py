@@ -30,12 +30,6 @@ app = Flask(__name__)
 
 _cors_origins = [
     "https://llm-seo-automation-system.vercel.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5000",
-    "http://127.0.0.1:5000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
 ]
 _extra = os.environ.get("CORS_ORIGINS", "")
 if _extra:
@@ -68,6 +62,13 @@ class TeeLogCapture(io.StringIO):
 
 def _split_logs(log_text: str):
     return [line for line in log_text.splitlines() if line.strip()]
+
+
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify(
+        {"status": "ok", "message": "AI SEO API is running"},
+    )
 
 
 @app.route("/api/health", methods=["GET"])
